@@ -27,13 +27,15 @@ _BME680_REG_PDATA = const(0x1F)
 _BME680_REG_TDATA = const(0x22)
 _BME680_REG_HDATA = const(0x25)
 
-_BME280_PRESSURE_MIN_HPA = const(300)
-_BME280_PRESSURE_MAX_HPA = const(1100)
-_BME280_HUMIDITY_MIN	 = const(0)
-_BME280_HUMIDITY_MAX	 = const(100)
 _BME680_SAMPLERATES = (0, 1, 2, 4, 8, 16)
+_BME680_FILTERSIZES = (0, 1, 3, 7, 15, 31, 63, 127)
 
 _BME680_RUNGAS = const(0x10)
+
+lookupTable1 = (2147483647.0, 2147483647.0, 2147483647.0, 2147483647.0, 2147483647.0, 2126008810.0, 2147483647.0, 2130303777.0, 2147483647.0, 2147483647.0, 2143188679.0, 2136746228.0, 2147483647.0, 2126008810.0, 2147483647.0, 2147483647.0)
+
+lookupTable2 = (4096000000.0, 2048000000.0, 1024000000.0, 512000000.0, 255744255.0, 127110228.0, 64000000.0, 32258064.0, 16016016.0, 8000000.0, 4000000.0, 2000000.0, 1000000.0, 500000.0, 250000.0, 125000.0)
+
 
 class Adafruit_BME680:
     def __init__(self):
@@ -51,51 +53,63 @@ class Adafruit_BME680:
 	# set up heater
 	self._write(_BME680_BME680_RES_WAIT_0, [0x73, 0x64, 0x65])
 	self.seaLevelhPa = 1013.25
-	#self.pressure_oversample = 16
-	#self.temp_oversample = 2
-	#self.hum_oversample = 1
-	self.osrs_h = 2
-	self.osrs_t = 4
-	self.osrs_p = 3
+	self.pres_oversample = 4
+	self.temp_oversample = 8
+	self.hum_oversample = 2
 	self.filter = 2
 	
-	# set filter
-	self._write(_BME680_REG_CONFIG, [self.filter << 2])
-	# turn on temp oversample & pressure oversample
-	self._write(_BME680_REG_CTRL_MEAS, [(self.osrs_t << 5)|(self.osrs_p << 2)])
-	# turn on humidity oversample
-	self._write(_BME680_REG_CTRL_HUM, [self.osrs_h])
-	# gas measurements enabled
-	self._write(_BME680_REG_CTRL_GAS, [_BME680_RUNGAS])
+    @property
+    def pres_oversample(self):
+        return _BME680_SAMPLERATES[self.osrs_p]
+    
+    @pres_oversample.setter
+    def pres_oversample(self, os):
+        """Set the oversampling for pressure sensor"""
+        if os in _BME680_SAMPLERATES:
+            self.osrs_p = _BME680_SAMPLERATES.index(os)
+        else:
+            raise RuntimeError("Invalid oversample")
 
-    def reading(self):
-	print("\n\nReading data");
-	v = self._read(_BME680_REG_CTRL_MEAS, 1)[0]
-	v = (v & 0xFC) | 0x01  # enable single shot!
-	self._write(_BME680_REG_CTRL_MEAS, [v])
-	
-	time.sleep(0.5)
+    @property
+    def hum_oversample(self):
+        return _BME680_SAMPLERATES[self.osrs_h]
+    
+    @hum_oversample.setter
+    def hum_oversample(self, os):
+        """Set the oversampling for humidity sensor"""
+        if os in _BME680_SAMPLERATES:
+            self.osrs_h = _BME680_SAMPLERATES.index(os)
+        else:
+            raise RuntimeError("Invalid oversample")
 
-	data = self._read(_BME680_REG_STATUS, 15)
-	print([hex(i) for i in data])
-	print("")
-	self._status = data[0] & 0x80
-	gas_idx = data[0] & 0x0F
-	meas_idx = data[1]
-	#print("status 0x%x gas_idx %d meas_idx %d" % (status, gas_idx, meas_idx))
-	
-	self._adc_pres = self._read24(data[2:5]) / 16
-	self._adc_temp = self._read24(data[5:8]) / 16
-	self._adc_hum = struct.unpack('>H', bytes(data[8:10]))[0]
-	self._adc_gas = int(struct.unpack('>H', bytes(data[13:15]))[0] / 64)
-	#print(self._adc_hum)
-	#print(self._adc_gas)
-	self._status |= data[14] & 0x30	 # VALID + STABILITY mask
+    @property
+    def temp_oversample(self):
+        return _BME680_SAMPLERATES[self.osrs_p]
+    
+    @temp_oversample.setter
+    def temp_oversample(self, os):
+        """Set the oversampling for temperature sensor"""
+        if os in _BME680_SAMPLERATES:
+            self.osrs_t = _BME680_SAMPLERATES.index(os)
+        else:
+            raise RuntimeError("Invalid oversample")
+
+    @property
+    def filter_size(self):
+        return _BME680_FILTERSIZES[self.filter]
+    
+    @filter_size.setter
+    def filter_size(self, fs):
+        """Set the filter size for the built in IIR filter"""
+        if fs in _BME680_FILTERSIZES:
+            self.filter = _BME680_FILTERSIZES(fs)
+        else:
+            raise RuntimeError("Invalid size")
 
     @property
     def temperature(self):
-	"""Gets the compensated temperature in degrees celsius."""
-	self.reading()
+	"""The compensated temperature in degrees celsius."""
+	self._perform_reading()
 	var1 = (self._adc_temp / 8) - (self._T1 * 2)
 	var2 = (var1 * self._T2) / 2048
 	var3 = ((var1 / 2) * (var1 / 2)) / 4096
@@ -106,6 +120,7 @@ class Adafruit_BME680:
 
     @property
     def pressure(self):
+        """The barometric pressure in hectoPascals"""
 	self.temperature
 	var1 = (self.t_fine / 2) - 64000
 	var2 = ((var1 / 4) * (var1 / 4)) / 2048
@@ -127,6 +142,7 @@ class Adafruit_BME680:
 
     @property
     def humidity(self):
+        """The relative humidity in RH %"""
 	self.temperature
 	temp_scaled = ((self.t_fine * 5) + 128) / 256
 	var1 = (self._adc_hum - (self._H1 * 16)) - ((temp_scaled * self._H3) / 200)
@@ -137,15 +153,60 @@ class Adafruit_BME680:
 	var5 = ((var3 / 16384) * (var3 / 16384)) / 1024
 	var6 = (var4 * var5) / 2
 	calc_hum = (((var3 + var6) / 1024) * 1000) / 4096
-        print(calc_hum)
 	calc_hum /= 1000  # get back to RH
         
 	if calc_hum > 100: calc_hum = 100
 	if calc_hum < 0: calc_hum = 0
 	return calc_hum
     
+    @property
+    def altitude(self):
+        """calculate the altitude based on the sea level pressure (seaLevelhPa) - which you must enter ahead of time)"""
+        p = self.pressure # in Si units for hPascal
+        return 44330 * (1.0 - math.pow(p / self.seaLevelhPa, 0.1903));
+
+    @property
+    def gas(self):
+        """Return the gas resistance in ohms"""
+	var1 = ((1340 + (5 * self._sw_err)) * (lookupTable1[self._gas_range])) / 65536
+	var2 = ((self._adc_gas * 32768) - 16777216) + var1
+	var3 = (lookupTable2[self._gas_range] * var1) / 512
+	calc_gas_res = (var3 + (var2 / 2)) / var2
+	return int(calc_gas_res)
+
+    def _perform_reading(self):
+        """Perform a single-shot reading from the sensor and fill internal data structure for calculations"""
+
+	# set filter
+	self._write(_BME680_REG_CONFIG, [self.filter << 2])
+	# turn on temp oversample & pressure oversample
+	self._write(_BME680_REG_CTRL_MEAS, [(self.osrs_t << 5)|(self.osrs_p << 2)])
+	# turn on humidity oversample
+	self._write(_BME680_REG_CTRL_HUM, [self.osrs_h])
+	# gas measurements enabled
+	self._write(_BME680_REG_CTRL_GAS, [_BME680_RUNGAS])
+
+	v = self._read(_BME680_REG_CTRL_MEAS, 1)[0]
+	v = (v & 0xFC) | 0x01  # enable single shot!
+	self._write(_BME680_REG_CTRL_MEAS, [v])	
+	time.sleep(0.5)
+	data = self._read(_BME680_REG_STATUS, 15)
+	self._status = data[0] & 0x80
+	gas_idx = data[0] & 0x0F
+	meas_idx = data[1]
+	#print("status 0x%x gas_idx %d meas_idx %d" % (status, gas_idx, meas_idx))
+	
+	self._adc_pres = self._read24(data[2:5]) / 16
+	self._adc_temp = self._read24(data[5:8]) / 16
+	self._adc_hum = struct.unpack('>H', bytes(data[8:10]))[0]
+	self._adc_gas = int(struct.unpack('>H', bytes(data[13:15]))[0] / 64)
+        self._gas_range = data[14] & 0x0F
+	#print(self._adc_hum)
+	#print(self._adc_gas)
+	self._status |= data[14] & 0x30	 # VALID + STABILITY mask
+
     def _read24(self, arr):
-	"""Read an unsigned 24-bit value as a floating point and return it."""
+	"""Parse an unsigned 24-bit value as a floating point and return it."""
 	ret = 0.0
 	#print([hex(i) for i in arr])
 	for b in arr:
@@ -167,9 +228,9 @@ class Adafruit_BME680:
 	self._H2 = h2m * 16 + (self._H1 % 16)
 	self._H1 /= 16
 
-	self._HEATRANGE = (self._read(0x02, 1)[0] & 0x30) / 16
-	self._HEATVAL = self._read(0x00, 1)[0]
-	self._SWERR = (self._read(0x04, 1)[0] & 0xF0) / 16
+	self._heat_range = (self._read(0x02, 1)[0] & 0x30) / 16
+	self._heat_val = self._read(0x00, 1)[0]
+	self._sw_err = (self._read(0x04, 1)[0] & 0xF0) / 16
 	
 	#print("T1-3: %d %d %d" % (self._T1, self._T2, self._T3))
 	#print("P1-3: %d %d %d" % (self._P1, self._P2, self._P3))
@@ -186,21 +247,27 @@ class Adafruit_BME680:
 	return self._read(register, 1)[0]
     
 class Adafruit_BME680_I2C(Adafruit_BME680):
-    def __init__(self, i2c, address=_BME680_ADDRESS):
+    def __init__(self, i2c, address=_BME680_ADDRESS, debug=False):
+        """Initialize the I2C device at the 'address' given"""
 	import adafruit_bus_device.i2c_device as i2c_device
 	self._i2c = i2c_device.I2CDevice(i2c, address)
+        self._debug = debug
 	super().__init__()
 
     def _read(self, register, length):
+        """Returns an array of 'length' bytes from the 'register'"""
 	with self._i2c as i2c:
 	    i2c.write(bytes([register & 0xFF]))
 	    result = bytearray(length)
 	    i2c.read_into(result)
-	    print("$%02X => %s" % (register, [hex(i) for i in result]))
+            if self._debug:
+                print("\t$%02X => %s" % (register, [hex(i) for i in result]))
 	    return result
 
     def _write(self, register, values):
+        """Writes an array of 'length' bytes to the 'register'"""
 	with self._i2c as i2c:
 	    values = [(v & 0xFF) for v in [register]+values]
 	    i2c.write(bytes(values))
-	    print("$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+            if self._debug:
+                print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
