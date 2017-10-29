@@ -10,7 +10,7 @@ Introduction
     :target: https://discord.gg/nBQh6qu
     :alt: Discord
 
-TODO
+CircuitPython driver for BME680 sensor over I2C
 
 Dependencies
 =============
