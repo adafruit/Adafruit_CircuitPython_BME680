@@ -26,7 +26,32 @@ This is easily achieved by downloading
 Usage Example
 =============
 
-TODO
+.. code-block:: python
+	import gc
+	from busio import I2C
+	import adafruit_bme680
+	import time
+	import board
+
+	gc.collect()
+	print("Free mem:",gc.mem_free())
+
+	# Create library object using our Bus I2C port
+	i2c = I2C(board.SCL, board.SDA)
+	bme280 = adafruit_bme680.Adafruit_BME680_I2C(i2c)
+
+	# change this to match the location's pressure (hPa) at sea level
+	bme280.seaLevelhPa = 1013.25
+
+	while True:
+	    print("\nTemperature: %0.1f C" % bme280.temperature)
+	    print("Gas: %d ohm" % bme280.gas)
+	    print("Humidity: %0.1f %%" % bme280.humidity)
+	    print("Pressure: %0.1f hPa" % bme280.pressure)
+	    print("Altitude = %0.2f meters" % bme280.altitude)
+
+	    time.sleep(2)
+
 
 Contributing
 ============
