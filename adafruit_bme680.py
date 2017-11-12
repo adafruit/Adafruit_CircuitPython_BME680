@@ -85,9 +85,9 @@ class Adafruit_BME680:
         self._write(_BME680_BME680_RES_WAIT_0, [0x73, 0x64, 0x65])
         self.seaLevelhPa = 1013.25
         """Pressure in hectoPascals at sea level. Used to calibrate `altitude`."""
-        self.pres_oversample = 4
-        self.temp_oversample = 8
-        self.hum_oversample = 2
+        self.osrs_p = 4
+        self.osrs_t = 8
+        self.osrs_h = 2
         self.filter = 2
 
     @property
