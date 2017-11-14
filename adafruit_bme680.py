@@ -202,6 +202,7 @@ class Adafruit_BME680:
     @property
     def gas(self):
         """The gas resistance in ohms"""
+        self._perform_reading()
         var1 = ((1340 + (5 * self._sw_err)) * (lookupTable1[self._gas_range])) / 65536
         var2 = ((self._adc_gas * 32768) - 16777216) + var1
         var3 = (lookupTable2[self._gas_range] * var1) / 512
