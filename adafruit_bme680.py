@@ -105,6 +105,7 @@ class Adafruit_BME680:
         self._write(_BME680_BME680_RES_WAIT_0, [0x73, 0x64, 0x65])
         self.sea_level_pressure = 1013.25
         """Pressure in hectoPascals at sea level. Used to calibrate `altitude`."""
+
         self.pressure_oversample = 4
         self.temperature_oversample = 8
         self.humidity_oversample = 2
@@ -258,11 +259,13 @@ class Adafruit_BME680:
         time.sleep(0.5)
         data = self._read(_BME680_REG_STATUS, 15)
         self._status = data[0] & 0x80
+
         #gas_idx = data[0] & 0x0F
         #meas_idx = data[1]
         #print("status 0x%x gas_idx %d meas_idx %d" % (self._status, gas_idx, meas_idx))
 
         #print([hex(i) for i in data])
+
         self._adc_pres = _read24(data[2:5]) / 16
         self._adc_temp = _read24(data[5:8]) / 16
         self._adc_hum = struct.unpack('>H', bytes(data[8:10]))[0]
@@ -326,7 +329,7 @@ class Adafruit_BME680:
                                   self._gas_calibration[2]))
         print("HR %d HV %d SWERR %d" % (self._heat_range, self._heat_val, self._sw_err))
         """
-        
+
     def _read_byte(self, register):
         """Read a byte register value and return it"""
         return self._read(register, 1)[0]
