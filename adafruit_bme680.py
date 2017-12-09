@@ -105,10 +105,11 @@ class Adafruit_BME680:
         self._write(_BME680_BME680_RES_WAIT_0, [0x73, 0x64, 0x65])
         self.sea_level_pressure = 1013.25
         """Pressure in hectoPascals at sea level. Used to calibrate `altitude`."""
-        self._pressure_oversample = 4
-        self._temp_oversample = 8
-        self._humidity_oversample = 2
-        self.filter = 2
+
+        self.pressure_oversample = 4
+        self.temperature_oversample = 8
+        self.humidity_oversample = 2
+        self.filter_size = 3
 
         self._adc_pres = None
         self._adc_temp = None
@@ -157,12 +158,12 @@ class Adafruit_BME680:
     @property
     def filter_size(self):
         """The filter size for the built in IIR filter"""
-        return _BME680_FILTERSIZES[self.filter]
+        return _BME680_FILTERSIZES[self._filter]
 
     @filter_size.setter
     def filter_size(self, size):
         if size in _BME680_FILTERSIZES:
-            self.filter = _BME680_FILTERSIZES[size]
+            self._filter = _BME680_FILTERSIZES[size]
         else:
             raise RuntimeError("Invalid size")
 
@@ -243,7 +244,7 @@ class Adafruit_BME680:
            calculations"""
 
         # set filter
-        self._write(_BME680_REG_CONFIG, [self.filter << 2])
+        self._write(_BME680_REG_CONFIG, [self._filter << 2])
         # turn on temp oversample & pressure oversample
         self._write(_BME680_REG_CTRL_MEAS,
                     [(self._temp_oversample << 5)|(self._pressure_oversample << 2)])
@@ -258,9 +259,12 @@ class Adafruit_BME680:
         time.sleep(0.5)
         data = self._read(_BME680_REG_STATUS, 15)
         self._status = data[0] & 0x80
-        # gas_idx = data[0] & 0x0F
-        # meas_idx = data[1]
-        #print("status 0x%x gas_idx %d meas_idx %d" % (status, gas_idx, meas_idx))
+
+        #gas_idx = data[0] & 0x0F
+        #meas_idx = data[1]
+        #print("status 0x%x gas_idx %d meas_idx %d" % (self._status, gas_idx, meas_idx))
+
+        #print([hex(i) for i in data])
 
         self._adc_pres = _read24(data[2:5]) / 16
         self._adc_temp = _read24(data[5:8]) / 16
@@ -299,30 +303,32 @@ class Adafruit_BME680:
         self._heat_val = self._read(0x00, 1)[0]
         self._sw_err = (self._read(0x04, 1)[0] & 0xF0) / 16
 
-        # print("T1-3: %d %d %d" % (self._temp_calibration[0],
-        #                           self._temp_calibration[1],
-        #                           self._temp_calibration[2]))
-        # print("P1-3: %d %d %d" % (self._pressure_calibration[0],
-        #                           self._pressure_calibration[1],
-        #                           self._pressure_calibration[2]))
-        # print("P4-6: %d %d %d" % (self._pressure_calibration[3],
-        #                           self._pressure_calibration[4],
-        #                           self._pressure_calibration[5]))
-        # print("P7-9: %d %d %d" % (self._pressure_calibration[6],
-        #                           self._pressure_calibration[7],
-        #                           self._pressure_calibration[8]))
-        # print("P10: %d" % self._pressure_calibration[0]0)
-        # print("H1-3: %d %d %d" % (self._humidity_calibration[0],
-        #                           self._humidity_calibration[1],
-        #                           self._humidity_calibration[2]))
-        # print("H4-7: %d %d %d %d" % (self._humidity_calibration[3],
-        #                              self._humidity_calibration[4],
-        #                              self._humidity_calibration[5],
-        #                              self._humidity_calibration[6]))
-        # print("G1-3: %d %d %d" % (self._gas_calibration[0],
-        #                           self._gas_calibration[1],
-        #                           self._gas_calibration[2]))
-        # print("HR %d HV %d SWERR %d" % (self._HEATRANGE, self._HEATVAL, self._SWERR))
+        """
+        print("T1-3: %d %d %d" % (self._temp_calibration[0],
+                                  self._temp_calibration[1],
+                                  self._temp_calibration[2]))
+        print("P1-3: %d %d %d" % (self._pressure_calibration[0],
+                                  self._pressure_calibration[1],
+                                  self._pressure_calibration[2]))
+        print("P4-6: %d %d %d" % (self._pressure_calibration[3],
+                                  self._pressure_calibration[4],
+                                  self._pressure_calibration[5]))
+        print("P7-9: %d %d %d" % (self._pressure_calibration[6],
+                                  self._pressure_calibration[7],
+                                  self._pressure_calibration[8]))
+        print("P10: %d" % self._pressure_calibration[9])
+        print("H1-3: %d %d %d" % (self._humidity_calibration[0],
+                                  self._humidity_calibration[1],
+                                  self._humidity_calibration[2]))
+        print("H4-7: %d %d %d %d" % (self._humidity_calibration[3],
+                                     self._humidity_calibration[4],
+                                     self._humidity_calibration[5],
+                                     self._humidity_calibration[6]))
+        print("G1-3: %d %d %d" % (self._gas_calibration[0],
+                                  self._gas_calibration[1],
+                                  self._gas_calibration[2]))
+        print("HR %d HV %d SWERR %d" % (self._heat_range, self._heat_val, self._sw_err))
+        """
 
     def _read_byte(self, register):
         """Read a byte register value and return it"""
