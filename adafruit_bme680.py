@@ -24,8 +24,8 @@
 # pylint: disable=too-many-instance-attributes
 
 """
-`adafruit_bme680`
-====================================================
+`adafruit_bme680` - Adafruit BME680 - Temperature, Humidity, Pressure & Gas Sensor
+===================================================================================
 
 CircuitPython driver from BME680 air quality sensor
 
@@ -104,7 +104,7 @@ class Adafruit_BME680:
         # set up heater
         self._write(_BME680_BME680_RES_WAIT_0, [0x73, 0x64, 0x65])
         self.sea_level_pressure = 1013.25
-        """Pressure in hectoPascals at sea level. Used to calibrate `altitude`."""
+        """Pressure in hectoPascals at sea level. Used to calibrate ``altitude``."""
         self.pressure_oversample = 4
         self.temperature_oversample = 8
         self.humidity_oversample = 2
@@ -223,8 +223,8 @@ class Adafruit_BME680:
 
     @property
     def altitude(self):
-        """The altitude based on current `pressure` vs the sea level pressure
-           (`sea_level_pressure`) - which you must enter ahead of time)"""
+        """The altitude based on current ``pressure`` vs the sea level pressure
+           (``sea_level_pressure``) - which you must enter ahead of time)"""
         pressure = self.pressure # in Si units for hPascal
         return 44330 * (1.0 - math.pow(pressure / self.sea_level_pressure, 0.1903))
 
