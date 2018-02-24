@@ -1,7 +1,6 @@
-import gc
+import time
 from busio import I2C
 import adafruit_bme680
-import time
 import board
 
 # Create library object using our Bus I2C port
@@ -17,5 +16,5 @@ while True:
     print("Humidity: %0.1f %%" % bme680.humidity)
     print("Pressure: %0.3f hPa" % bme680.pressure)
     print("Altitude = %0.2f meters" % bme680.altitude)
-    
+
     time.sleep(1)
