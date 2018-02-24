@@ -300,34 +300,6 @@ class Adafruit_BME680:
         self._heat_val = self._read(0x00, 1)[0]
         self._sw_err = (self._read(0x04, 1)[0] & 0xF0) / 16
 
-        # pylint disable=pointless-string-statement
-        """
-        print("T1-3: %d %d %d" % (self._temp_calibration[0],
-                                  self._temp_calibration[1],
-                                  self._temp_calibration[2]))
-        print("P1-3: %d %d %d" % (self._pressure_calibration[0],
-                                  self._pressure_calibration[1],
-                                  self._pressure_calibration[2]))
-        print("P4-6: %d %d %d" % (self._pressure_calibration[3],
-                                  self._pressure_calibration[4],
-                                  self._pressure_calibration[5]))
-        print("P7-9: %d %d %d" % (self._pressure_calibration[6],
-                                  self._pressure_calibration[7],
-                                  self._pressure_calibration[8]))
-        print("P10: %d" % self._pressure_calibration[9])
-        print("H1-3: %d %d %d" % (self._humidity_calibration[0],
-                                  self._humidity_calibration[1],
-                                  self._humidity_calibration[2]))
-        print("H4-7: %d %d %d %d" % (self._humidity_calibration[3],
-                                     self._humidity_calibration[4],
-                                     self._humidity_calibration[5],
-                                     self._humidity_calibration[6]))
-        print("G1-3: %d %d %d" % (self._gas_calibration[0],
-                                  self._gas_calibration[1],
-                                  self._gas_calibration[2]))
-        print("HR %d HV %d SWERR %d" % (self._heat_range, self._heat_val, self._sw_err))
-        """
-
     def _read_byte(self, register):
         """Read a byte register value and return it"""
         return self._read(register, 1)[0]
