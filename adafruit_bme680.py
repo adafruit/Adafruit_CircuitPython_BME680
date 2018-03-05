@@ -24,8 +24,8 @@
 # pylint: disable=too-many-instance-attributes
 
 """
-`adafruit_bme680`
-====================================================
+`adafruit_bme680` - Adafruit BME680 - Temperature, Humidity, Pressure & Gas Sensor
+===================================================================================
 
 CircuitPython driver from BME680 air quality sensor
 
@@ -104,11 +104,11 @@ class Adafruit_BME680:
         # set up heater
         self._write(_BME680_BME680_RES_WAIT_0, [0x73, 0x64, 0x65])
         self.sea_level_pressure = 1013.25
-        """Pressure in hectoPascals at sea level. Used to calibrate `altitude`."""
-        self.pressure_oversample = 4
-        self.temperature_oversample = 8
-        self.humidity_oversample = 2
-        self.filter_size = 3
+        """Pressure in hectoPascals at sea level. Used to calibrate ``altitude``."""
+        self._pressure_oversample = 4
+        self._temp_oversample = 8
+        self._humidity_oversample = 2
+        self._filter = 3
 
         self._adc_pres = None
         self._adc_temp = None
@@ -145,7 +145,7 @@ class Adafruit_BME680:
     @property
     def temperature_oversample(self):
         """The oversampling for temperature sensor"""
-        return _BME680_SAMPLERATES[self._pressure_oversample]
+        return _BME680_SAMPLERATES[self._temp_oversample]
 
     @temperature_oversample.setter
     def temperature_oversample(self, sample_rate):
@@ -223,8 +223,8 @@ class Adafruit_BME680:
 
     @property
     def altitude(self):
-        """The altitude based on current `pressure` vs the sea level pressure
-           (`sea_level_pressure`) - which you must enter ahead of time)"""
+        """The altitude based on current ``pressure`` vs the sea level pressure
+           (``sea_level_pressure``) - which you must enter ahead of time)"""
         pressure = self.pressure # in Si units for hPascal
         return 44330 * (1.0 - math.pow(pressure / self.sea_level_pressure, 0.1903))
 
@@ -300,33 +300,6 @@ class Adafruit_BME680:
         self._heat_val = self._read(0x00, 1)[0]
         self._sw_err = (self._read(0x04, 1)[0] & 0xF0) / 16
 
-        """
-        print("T1-3: %d %d %d" % (self._temp_calibration[0],
-                                  self._temp_calibration[1],
-                                  self._temp_calibration[2]))
-        print("P1-3: %d %d %d" % (self._pressure_calibration[0],
-                                  self._pressure_calibration[1],
-                                  self._pressure_calibration[2]))
-        print("P4-6: %d %d %d" % (self._pressure_calibration[3],
-                                  self._pressure_calibration[4],
-                                  self._pressure_calibration[5]))
-        print("P7-9: %d %d %d" % (self._pressure_calibration[6],
-                                  self._pressure_calibration[7],
-                                  self._pressure_calibration[8]))
-        print("P10: %d" % self._pressure_calibration[9])
-        print("H1-3: %d %d %d" % (self._humidity_calibration[0],
-                                  self._humidity_calibration[1],
-                                  self._humidity_calibration[2]))
-        print("H4-7: %d %d %d %d" % (self._humidity_calibration[3],
-                                     self._humidity_calibration[4],
-                                     self._humidity_calibration[5],
-                                     self._humidity_calibration[6]))
-        print("G1-3: %d %d %d" % (self._gas_calibration[0],
-                                  self._gas_calibration[1],
-                                  self._gas_calibration[2]))
-        print("HR %d HV %d SWERR %d" % (self._heat_range, self._heat_val, self._sw_err))
-        """
-        
     def _read_byte(self, register):
         """Read a byte register value and return it"""
         return self._read(register, 1)[0]
