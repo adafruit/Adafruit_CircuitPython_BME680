@@ -343,9 +343,9 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
         """Writes an array of 'length' bytes to the 'register'"""
         with self._i2c as i2c:
             buffer = bytearray(2 * len(values))
-            for i in range(len(values)):
+            for i, value in enumerate(values):
                 buffer[2 * i] = register + i
-                buffer[2 * i + 1] = values[i]
+                buffer[2 * i + 1] = value
             i2c.write(buffer)
             if self._debug:
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
