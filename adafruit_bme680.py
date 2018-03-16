@@ -87,17 +87,20 @@ def _read24(arr):
 
 
 class Adafruit_BME680:
-    """Driver from BME680 air quality sensor"""
-    def __init__(self):
+    """Driver from BME680 air quality sensor
+
+       :param int refresh_rate: Maximum number of readings per second. Faster property reads
+         will be from the previous reading."""
+    def __init__(self, *, refresh_rate=10):
         """Check the BME680 was found, read the coefficients and enable the sensor for continuous
-           reads"""
+           reads."""
         self._write(_BME680_REG_SOFTRESET, [0xB6])
-        time.sleep(0.5)
+        time.sleep(0.005)
 
         # Check device ID.
         chip_id = self._read_byte(_BME680_REG_CHIPID)
-        if _BME680_CHIPID != chip_id:
-            raise RuntimeError('Failed to find BME680! Chip ID 0x%x' % id)
+        if chip_id != _BME680_CHIPID:
+            raise RuntimeError('Failed to find BME680! Chip ID 0x%x' % chip_id)
 
         self._read_calibration()
 
@@ -105,10 +108,12 @@ class Adafruit_BME680:
         self._write(_BME680_BME680_RES_WAIT_0, [0x73, 0x64, 0x65])
         self.sea_level_pressure = 1013.25
         """Pressure in hectoPascals at sea level. Used to calibrate ``altitude``."""
-        self._pressure_oversample = 4
-        self._temp_oversample = 8
-        self._humidity_oversample = 2
-        self._filter = 3
+
+        # Default oversampling and filter register values.
+        self._pressure_oversample = 0b011
+        self._temp_oversample = 0b100
+        self._humidity_oversample = 0b010
+        self._filter = 0b010
 
         self._adc_pres = None
         self._adc_temp = None
@@ -116,7 +121,9 @@ class Adafruit_BME680:
         self._adc_gas = None
         self._gas_range = None
         self._t_fine = None
-        self._status = 0
+
+        self._last_reading = 0
+        self._min_refresh_time = 1 / refresh_rate
 
     @property
     def pressure_oversample(self):
@@ -241,6 +248,8 @@ class Adafruit_BME680:
     def _perform_reading(self):
         """Perform a single-shot reading from the sensor and fill internal data structure for
            calculations"""
+        if time.monotonic() - self._last_reading < self._min_refresh_time:
+            return
 
         # set filter
         self._write(_BME680_REG_CONFIG, [self._filter << 2])
@@ -252,25 +261,21 @@ class Adafruit_BME680:
         # gas measurements enabled
         self._write(_BME680_REG_CTRL_GAS, [_BME680_RUNGAS])
 
-        ctrl = self._read(_BME680_REG_CTRL_MEAS, 1)[0]
+        ctrl = self._read_byte(_BME680_REG_CTRL_MEAS)
         ctrl = (ctrl & 0xFC) | 0x01  # enable single shot!
         self._write(_BME680_REG_CTRL_MEAS, [ctrl])
-        time.sleep(0.5)
-        data = self._read(_BME680_REG_STATUS, 15)
-        self._status = data[0] & 0x80
-        #gas_idx = data[0] & 0x0F
-        #meas_idx = data[1]
-        #print("status 0x%x gas_idx %d meas_idx %d" % (self._status, gas_idx, meas_idx))
+        new_data = False
+        while not new_data:
+            data = self._read(_BME680_REG_STATUS, 15)
+            new_data = data[0] & 0x80 != 0
+            time.sleep(0.005)
+        self._last_reading = time.monotonic()
 
-        #print([hex(i) for i in data])
         self._adc_pres = _read24(data[2:5]) / 16
         self._adc_temp = _read24(data[5:8]) / 16
         self._adc_hum = struct.unpack('>H', bytes(data[8:10]))[0]
         self._adc_gas = int(struct.unpack('>H', bytes(data[13:15]))[0] / 64)
         self._gas_range = data[14] & 0x0F
-        #print(self._adc_hum)
-        #print(self._adc_gas)
-        self._status |= data[14] & 0x30     # VALID + STABILITY mask
 
         var1 = (self._adc_temp / 8) - (self._temp_calibration[0] * 2)
         var2 = (var1 * self._temp_calibration[1]) / 2048
@@ -296,9 +301,9 @@ class Adafruit_BME680:
         self._humidity_calibration[1] += self._humidity_calibration[0] % 16
         self._humidity_calibration[0] /= 16
 
-        self._heat_range = (self._read(0x02, 1)[0] & 0x30) / 16
-        self._heat_val = self._read(0x00, 1)[0]
-        self._sw_err = (self._read(0x04, 1)[0] & 0xF0) / 16
+        self._heat_range = (self._read_byte(0x02) & 0x30) / 16
+        self._heat_val = self._read_byte(0x00)
+        self._sw_err = (self._read_byte(0x04) & 0xF0) / 16
 
     def _read_byte(self, register):
         """Read a byte register value and return it"""
@@ -311,13 +316,18 @@ class Adafruit_BME680:
         raise NotImplementedError()
 
 class Adafruit_BME680_I2C(Adafruit_BME680):
-    """Driver for I2C connected BME680."""
-    def __init__(self, i2c, address=0x77, debug=False):
+    """Driver for I2C connected BME680.
+
+        :param int address: I2C device address
+        :param bool debug: Print debug statements when True.
+        :param int refresh_rate: Maximum number of readings per second. Faster property reads
+          will be from the previous reading."""
+    def __init__(self, i2c, address=0x77, debug=False, *, refresh_rate=10):
         """Initialize the I2C device at the 'address' given"""
         import adafruit_bus_device.i2c_device as i2c_device
         self._i2c = i2c_device.I2CDevice(i2c, address)
         self._debug = debug
-        super().__init__()
+        super().__init__(refresh_rate=refresh_rate)
 
     def _read(self, register, length):
         """Returns an array of 'length' bytes from the 'register'"""
@@ -332,7 +342,10 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
     def _write(self, register, values):
         """Writes an array of 'length' bytes to the 'register'"""
         with self._i2c as i2c:
-            values = [(v & 0xFF) for v in [register]+values]
-            i2c.write(bytes(values))
+            buffer = bytearray(2 * len(values))
+            for i, value in enumerate(values):
+                buffer[2 * i] = register + i
+                buffer[2 * i + 1] = value
+            i2c.write(buffer)
             if self._debug:
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
