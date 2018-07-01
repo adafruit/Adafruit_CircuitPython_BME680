@@ -1,7 +1,7 @@
 import time
+import board
 from busio import I2C
 import adafruit_bme680
-import board
 
 # Create library object using our Bus I2C port
 i2c = I2C(board.SCL, board.SDA)
