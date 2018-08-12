@@ -288,7 +288,7 @@ class Adafruit_BME680:
         coeff = self._read(_BME680_BME680_COEFF_ADDR1, 25)
         coeff += self._read(_BME680_BME680_COEFF_ADDR2, 16)
 
-        coeff = list(struct.unpack('<hbBHhbBhhbbHhhBBBHbbbBbHhbb', bytes(coeff[1:])))
+        coeff = list(struct.unpack('<hbBHhbBhhbbHhhBBBHbbbBbHhbb', bytes(coeff[1:39])))
         #print("\n\n",coeff)
         coeff = [float(i) for i in coeff]
         self._temp_calibration = [coeff[x] for x in [23, 0, 1]]
