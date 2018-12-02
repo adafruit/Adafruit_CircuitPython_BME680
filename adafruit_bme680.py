@@ -189,8 +189,8 @@ class Adafruit_BME680:
         var2 = (var2 * self._pressure_calibration[5]) / 4
         var2 = var2 + (var1 * self._pressure_calibration[4] * 2)
         var2 = (var2 / 4) + (self._pressure_calibration[3] * 65536)
-        var1 = ((var1 / 4) * (var1 / 4)) / 8192
-        var1 = (((var1 * self._pressure_calibration[2] * 32) / 8) +
+        var1 = (((((var1 / 4) * (var1 / 4)) / 8192) *
+                 (self._pressure_calibration[2] * 32) / 8) +
                 ((self._pressure_calibration[1] * var1) / 2))
         var1 = var1 / 262144
         var1 = ((32768 + var1) * self._pressure_calibration[0]) / 32768
