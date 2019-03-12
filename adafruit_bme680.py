@@ -324,7 +324,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
           will be from the previous reading."""
     def __init__(self, i2c, address=0x77, debug=False, *, refresh_rate=10):
         """Initialize the I2C device at the 'address' given"""
-        import adafruit_bus_device.i2c_device as i2c_device
+        from adafruit_bus_device import i2c_device
         self._i2c = i2c_device.I2CDevice(i2c, address)
         self._debug = debug
         super().__init__(refresh_rate=refresh_rate)
