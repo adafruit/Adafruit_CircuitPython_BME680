@@ -351,12 +351,21 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
 
 class Adafruit_BME680_SPI(Adafruit_BME680):
-    """Driver for BME680 connected over SPI.  Default clock rate is 100000 but can be changed with
-      'baudrate'"""
-    def __init__(self, spi, cs, baudrate=100000):
+    """Driver for SPI connected BME680.
+
+        :param busio.SPI spi: SPI device
+        :param digitalio.DigitalInOut cs: Chip Select
+        :param bool debug: Print debug statements when True.
+        :param int baudrate: Clock rate, default is 100000
+        :param int refresh_rate: Maximum number of readings per second. Faster property reads
+          will be from the previous reading.
+      """
+
+    def __init__(self, spi, cs, baudrate=100000, debug=False, *, refresh_rate=10):
         from adafruit_bus_device import spi_device
         self._spi = spi_device.SPIDevice(spi, cs, baudrate=baudrate)
-        super().__init__()
+        self._debug = debug
+        super().__init__(refresh_rate=refresh_rate)
 
     def _read(self, register, length):
         register = (register | 0x80) & 0xFF  # Read single, bit 7 high.
@@ -364,6 +373,8 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             spi.write(bytearray([register]))  #pylint: disable=no-member
             result = bytearray(length)
             spi.readinto(result)              #pylint: disable=no-member
+            if self._debug:
+                print("\t$%02X => %s" % (register, [hex(i) for i in result]))
             return result
 
     def _write(self, register, values):
@@ -374,3 +385,5 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
                 buffer[2 * i] = register + i
                 buffer[2 * i + 1] = value & 0xFF
             spi.write(buffer) #pylint: disable=no-member
+            if self._debug:
+                print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
