@@ -401,4 +401,4 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
         spi_mem_page = 0x00
         if register < 0x80:
             spi_mem_page = 0x10
-        self._write(_BME680_REG_STATUS, spi_mem_page)
+        self._write(_BME680_REG_STATUS, [spi_mem_page])
