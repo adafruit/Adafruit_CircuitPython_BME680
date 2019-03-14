@@ -52,11 +52,11 @@ _BME680_BME680_RES_WAIT_0 = const(0x5A)
 _BME680_REG_SOFTRESET = const(0xE0)
 _BME680_REG_CTRL_GAS = const(0x71)
 _BME680_REG_CTRL_HUM = const(0x72)
-_BME280_REG_STATUS = const(0xF3)
+_BME680_REG_STATUS = const(0x73)
 _BME680_REG_CTRL_MEAS = const(0x74)
 _BME680_REG_CONFIG = const(0x75)
 
-_BME680_REG_STATUS = const(0x1D)
+_BME680_REG_MEAS_STATUS = const(0x1D)
 _BME680_REG_PDATA = const(0x1F)
 _BME680_REG_TDATA = const(0x22)
 _BME680_REG_HDATA = const(0x25)
@@ -266,7 +266,7 @@ class Adafruit_BME680:
         self._write(_BME680_REG_CTRL_MEAS, [ctrl])
         new_data = False
         while not new_data:
-            data = self._read(_BME680_REG_STATUS, 15)
+            data = self._read(_BME680_REG_MEAS_STATUS, 15)
             new_data = data[0] & 0x80 != 0
             time.sleep(0.005)
         self._last_reading = time.monotonic()
@@ -324,7 +324,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
           will be from the previous reading."""
     def __init__(self, i2c, address=0x77, debug=False, *, refresh_rate=10):
         """Initialize the I2C device at the 'address' given"""
-        import adafruit_bus_device.i2c_device as i2c_device
+        from adafruit_bus_device import i2c_device
         self._i2c = i2c_device.I2CDevice(i2c, address)
         self._debug = debug
         super().__init__(refresh_rate=refresh_rate)
@@ -349,3 +349,56 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
             i2c.write(buffer)
             if self._debug:
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+
+class Adafruit_BME680_SPI(Adafruit_BME680):
+    """Driver for SPI connected BME680.
+
+        :param busio.SPI spi: SPI device
+        :param digitalio.DigitalInOut cs: Chip Select
+        :param bool debug: Print debug statements when True.
+        :param int baudrate: Clock rate, default is 100000
+        :param int refresh_rate: Maximum number of readings per second. Faster property reads
+          will be from the previous reading.
+      """
+
+    def __init__(self, spi, cs, baudrate=100000, debug=False, *, refresh_rate=10):
+        from adafruit_bus_device import spi_device
+        self._spi = spi_device.SPIDevice(spi, cs, baudrate=baudrate)
+        self._debug = debug
+        super().__init__(refresh_rate=refresh_rate)
+
+    def _read(self, register, length):
+        if register != _BME680_REG_STATUS:
+            #_BME680_REG_STATUS exists in both SPI memory pages
+            #For all other registers, we must set the correct memory page
+            self._set_spi_mem_page(register)
+
+        register = (register | 0x80) & 0xFF  # Read single, bit 7 high.
+        with self._spi as spi:
+            spi.write(bytearray([register]))  #pylint: disable=no-member
+            result = bytearray(length)
+            spi.readinto(result)              #pylint: disable=no-member
+            if self._debug:
+                print("\t$%02X => %s" % (register, [hex(i) for i in result]))
+            return result
+
+    def _write(self, register, values):
+        if register != _BME680_REG_STATUS:
+            #_BME680_REG_STATUS exists in both SPI memory pages
+            #For all other registers, we must set the correct memory page
+            self._set_spi_mem_page(register)
+        register &= 0x7F  # Write, bit 7 low.
+        with self._spi as spi:
+            buffer = bytearray(2 * len(values))
+            for i, value in enumerate(values):
+                buffer[2 * i] = register + i
+                buffer[2 * i + 1] = value & 0xFF
+            spi.write(buffer) #pylint: disable=no-member
+            if self._debug:
+                print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+
+    def _set_spi_mem_page(self, register):
+        spi_mem_page = 0x00
+        if register < 0x80:
+            spi_mem_page = 0x10
+        self._write(_BME680_REG_STATUS, [spi_mem_page])
