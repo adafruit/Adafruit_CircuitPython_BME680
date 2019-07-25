@@ -108,7 +108,7 @@ class Adafruit_BME680:
         # set up heater
         self._write(_BME680_BME680_RES_HEAT_0, [0x73])
         self._write(_BME680_BME680_GAS_WAIT_0, [0x65])
-        
+
         self.sea_level_pressure = 1013.25
         """Pressure in hectoPascals at sea level. Used to calibrate ``altitude``."""
 
