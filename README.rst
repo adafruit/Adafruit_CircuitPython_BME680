@@ -27,19 +27,39 @@ Please ensure all dependencies are available on the CircuitPython filesystem.
 This is easily achieved by downloading
 `the Adafruit library and driver bundle <https://github.com/adafruit/Adafruit_CircuitPython_Bundle>`_.
 
+Installing from PyPI
+=====================
+On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
+PyPI <https://pypi.org/project/adafruit-circuitpython-bme680/>`_. To install for current user:
+
+.. code-block:: shell
+
+    pip3 install adafruit-circuitpython-bme680
+
+To install system-wide (this may be required in some cases):
+
+.. code-block:: shell
+
+    sudo pip3 install adafruit-circuitpython-bme680
+
+To install in a virtual environment in your current project:
+
+.. code-block:: shell
+
+    mkdir project-name && cd project-name
+    python3 -m venv .env
+    source .env/bin/activate
+    pip3 install adafruit-circuitpython-bme680
+
 Usage Example
 =============
 
 .. code-block:: python
 
-	import gc
 	from busio import I2C
 	import adafruit_bme680
 	import time
 	import board
-
-	gc.collect()
-	print("Free mem:",gc.mem_free())
 
 	# Create library object using our Bus I2C port
 	i2c = I2C(board.SCL, board.SDA)
