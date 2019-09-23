@@ -23,7 +23,7 @@ setup(
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
 
-    description='CircuitPython library for controlling a BME680 sensor chip.',
+    description='CircuitPython library for BME680 temperature, pressure and humidity sensor.',
     long_description=long_description,
     long_description_content_type='text/x-rst',
 
@@ -52,7 +52,8 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='adafruit bme680 hardware micropython circuitpython',
+    keywords='adafruit blinka circuitpython micropython bme680 hardware temperature pressure '
+             'humidity gas',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().

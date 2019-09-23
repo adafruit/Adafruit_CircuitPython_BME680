@@ -24,13 +24,28 @@
 # pylint: disable=too-many-instance-attributes
 
 """
-`adafruit_bme680` - Adafruit BME680 - Temperature, Humidity, Pressure & Gas Sensor
-===================================================================================
+`adafruit_bme680`
+================================================================================
 
-CircuitPython driver from BME680 air quality sensor
+CircuitPython library for BME680 temperature, pressure and humidity sensor.
 
-* Author(s): ladyada
+
+* Author(s): Limor Fried
+
+Implementation Notes
+--------------------
+
+**Hardware:**
+
+* `Adafruit BME680 Temp, Humidity, Pressure and Gas Sensor <https://www.adafruit.com/product/3660>`_
+
+**Software and Dependencies:**
+
+* Adafruit CircuitPython firmware for the supported boards:
+  https://github.com/adafruit/circuitpython/releases
+* Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 """
+
 
 import time
 import math
@@ -39,6 +54,10 @@ try:
     import struct
 except ImportError:
     import ustruct as struct
+
+__version__ = "0.0.0-auto.0"
+__repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BME680.git"
+
 
 #    I2C ADDRESS/BITS/SETTINGS
 #    -----------------------------------------------------------------------
@@ -315,6 +334,7 @@ class Adafruit_BME680:
     def _write(self, register, values):
         raise NotImplementedError()
 
+
 class Adafruit_BME680_I2C(Adafruit_BME680):
     """Driver for I2C connected BME680.
 
@@ -349,6 +369,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
             i2c.write(buffer)
             if self._debug:
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+
 
 class Adafruit_BME680_SPI(Adafruit_BME680):
     """Driver for SPI connected BME680.
