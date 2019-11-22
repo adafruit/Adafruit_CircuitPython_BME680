@@ -188,7 +188,7 @@ class Adafruit_BME680:
     @filter_size.setter
     def filter_size(self, size):
         if size in _BME680_FILTERSIZES:
-            self._filter = _BME680_FILTERSIZES[size]
+            self._filter = _BME680_FILTERSIZES.index(size)
         else:
             raise RuntimeError("Invalid size")
 
