@@ -66,7 +66,8 @@ _BME680_CHIPID = const(0x61)
 _BME680_REG_CHIPID = const(0xD0)
 _BME680_BME680_COEFF_ADDR1 = const(0x89)
 _BME680_BME680_COEFF_ADDR2 = const(0xE1)
-_BME680_BME680_RES_WAIT_0 = const(0x5A)
+_BME680_BME680_RES_HEAT_0 = const(0x5A)
+_BME680_BME680_GAS_WAIT_0 = const(0x64)
 
 _BME680_REG_SOFTRESET = const(0xE0)
 _BME680_REG_CTRL_GAS = const(0x71)
@@ -124,7 +125,9 @@ class Adafruit_BME680:
         self._read_calibration()
 
         # set up heater
-        self._write(_BME680_BME680_RES_WAIT_0, [0x73, 0x64, 0x65])
+        self._write(_BME680_BME680_RES_HEAT_0, [0x73])
+        self._write(_BME680_BME680_GAS_WAIT_0, [0x65])
+
         self.sea_level_pressure = 1013.25
         """Pressure in hectoPascals at sea level. Used to calibrate ``altitude``."""
 
