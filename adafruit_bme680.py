@@ -146,7 +146,6 @@ class Adafruit_BME680:
         """Check the BME680 was found, read the coefficients and enable the sensor for continuous
            reads."""
 
-
         self._write(_BME680_REG_SOFTRESET, [0xB6])
         time.sleep(0.005)
 
