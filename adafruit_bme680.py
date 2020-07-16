@@ -142,9 +142,11 @@ class Adafruit_BME680:
        :param int refresh_rate: Maximum number of readings per second. Faster property reads
          will be from the previous reading."""
 
-    def __init__(self, *, refresh_rate=10):
+    def __init__(self, *, refresh_rate=10, temp_offset=5):
         """Check the BME680 was found, read the coefficients and enable the sensor for continuous
            reads."""
+
+
         self._write(_BME680_REG_SOFTRESET, [0xB6])
         time.sleep(0.005)
 
@@ -177,6 +179,9 @@ class Adafruit_BME680:
 
         self._last_reading = 0
         self._min_refresh_time = 1 / refresh_rate
+
+        # Set up temperature offset
+        self.temp_offset = temp_offset
 
     @property
     def pressure_oversample(self):
@@ -231,7 +236,7 @@ class Adafruit_BME680:
         """The compensated temperature in degrees celsius."""
         self._perform_reading()
         calc_temp = ((self._t_fine * 5) + 128) / 256
-        return calc_temp / 100
+        return (calc_temp / 100) - self.temp_offset
 
     @property
     def pressure(self):
