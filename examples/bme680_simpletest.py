@@ -11,7 +11,9 @@ bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c, debug=False)
 bme680.sea_level_pressure = 1013.25
 
 while True:
-    print("\nTemperature: %0.1f C" % bme680.temperature)
+    # You will usually have to add an offset to account for the temperature of
+    # the sensor. This is usually around 5 degrees.
+    print("\nTemperature: %0.1f C" % bme680.temperature - 5)
     print("Gas: %d ohm" % bme680.gas)
     print("Humidity: %0.1f %%" % bme680.humidity)
     print("Pressure: %0.3f hPa" % bme680.pressure)
