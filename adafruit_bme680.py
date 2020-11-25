@@ -261,6 +261,11 @@ class Adafruit_BME680:
         return calc_pres / 100
 
     @property
+    def relative_humidity(self):
+        """The relative humidity in RH %"""
+        return self.humidity
+
+    @property
     def humidity(self):
         """The relative humidity in RH %"""
         self._perform_reading()
