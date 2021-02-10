@@ -1,24 +1,6 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2017 ladyada for Adafruit Industries
 #
-# Copyright (c) 2017 ladyada for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
 
 # We have a lot of attributes for this complex sensor.
 # pylint: disable=too-many-instance-attributes
@@ -139,12 +121,12 @@ def _read24(arr):
 class Adafruit_BME680:
     """Driver from BME680 air quality sensor
 
-       :param int refresh_rate: Maximum number of readings per second. Faster property reads
-         will be from the previous reading."""
+    :param int refresh_rate: Maximum number of readings per second. Faster property reads
+      will be from the previous reading."""
 
     def __init__(self, *, refresh_rate=10):
         """Check the BME680 was found, read the coefficients and enable the sensor for continuous
-           reads."""
+        reads."""
         self._write(_BME680_REG_SOFTRESET, [0xB6])
         time.sleep(0.005)
 
@@ -307,7 +289,7 @@ class Adafruit_BME680:
     @property
     def altitude(self):
         """The altitude based on current ``pressure`` vs the sea level pressure
-           (``sea_level_pressure``) - which you must enter ahead of time)"""
+        (``sea_level_pressure``) - which you must enter ahead of time)"""
         pressure = self.pressure  # in Si units for hPascal
         return 44330 * (1.0 - math.pow(pressure / self.sea_level_pressure, 0.1903))
 
@@ -325,7 +307,7 @@ class Adafruit_BME680:
 
     def _perform_reading(self):
         """Perform a single-shot reading from the sensor and fill internal data structure for
-           calculations"""
+        calculations"""
         if time.monotonic() - self._last_reading < self._min_refresh_time:
             return
 
@@ -401,10 +383,10 @@ class Adafruit_BME680:
 class Adafruit_BME680_I2C(Adafruit_BME680):
     """Driver for I2C connected BME680.
 
-        :param int address: I2C device address
-        :param bool debug: Print debug statements when True.
-        :param int refresh_rate: Maximum number of readings per second. Faster property reads
-          will be from the previous reading."""
+    :param int address: I2C device address
+    :param bool debug: Print debug statements when True.
+    :param int refresh_rate: Maximum number of readings per second. Faster property reads
+      will be from the previous reading."""
 
     def __init__(self, i2c, address=0x77, debug=False, *, refresh_rate=10):
         """Initialize the I2C device at the 'address' given"""
@@ -441,13 +423,13 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
 class Adafruit_BME680_SPI(Adafruit_BME680):
     """Driver for SPI connected BME680.
 
-        :param busio.SPI spi: SPI device
-        :param digitalio.DigitalInOut cs: Chip Select
-        :param bool debug: Print debug statements when True.
-        :param int baudrate: Clock rate, default is 100000
-        :param int refresh_rate: Maximum number of readings per second. Faster property reads
-          will be from the previous reading.
-      """
+    :param busio.SPI spi: SPI device
+    :param digitalio.DigitalInOut cs: Chip Select
+    :param bool debug: Print debug statements when True.
+    :param int baudrate: Clock rate, default is 100000
+    :param int refresh_rate: Maximum number of readings per second. Faster property reads
+      will be from the previous reading.
+    """
 
     def __init__(self, spi, cs, baudrate=100000, debug=False, *, refresh_rate=10):
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
