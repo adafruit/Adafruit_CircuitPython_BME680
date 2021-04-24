@@ -23,6 +23,8 @@ Table of Contents
 .. toctree::
     :caption: Tutorials
 
+    Adafruit BME680 - Temperature, Humidity, Pressure and Gas Sensor Learning Guide <https://learn.adafruit.com/adafruit-bme680-humidity-temperature-barometic-pressure-voc-gas>
+
 .. toctree::
     :caption: Related Products
 

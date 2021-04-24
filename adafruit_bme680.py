@@ -142,7 +142,7 @@ class Adafruit_BME680:
         self._write(_BME680_BME680_GAS_WAIT_0, [0x65])
 
         self.sea_level_pressure = 1013.25
-        """Pressure in hectoPascals at sea level. Used to calibrate ``altitude``."""
+        """Pressure in hectoPascals at sea level. Used to calibrate :attr:`altitude`."""
 
         # Default oversampling and filter register values.
         self._pressure_oversample = 0b011
@@ -210,7 +210,7 @@ class Adafruit_BME680:
 
     @property
     def temperature(self):
-        """The compensated temperature in degrees celsius."""
+        """The compensated temperature in degrees Celsius."""
         self._perform_reading()
         calc_temp = ((self._t_fine * 5) + 128) / 256
         return calc_temp / 100
@@ -288,8 +288,8 @@ class Adafruit_BME680:
 
     @property
     def altitude(self):
-        """The altitude based on current ``pressure`` vs the sea level pressure
-        (``sea_level_pressure``) - which you must enter ahead of time)"""
+        """The altitude based on current :attr:`pressure` vs the sea level pressure
+        (:attr:`sea_level_pressure`) - which you must enter ahead of time)"""
         pressure = self.pressure  # in Si units for hPascal
         return 44330 * (1.0 - math.pow(pressure / self.sea_level_pressure, 0.1903))
 
@@ -383,10 +383,47 @@ class Adafruit_BME680:
 class Adafruit_BME680_I2C(Adafruit_BME680):
     """Driver for I2C connected BME680.
 
-    :param int address: I2C device address
-    :param bool debug: Print debug statements when True.
+    :param ~busio.I2C i2c: The I2C bus the BME680 is connected to.
+    :param int address: I2C device address. Defaults to :const:`0x77`
+    :param bool debug: Print debug statements when `True`. Defaults to `False`
     :param int refresh_rate: Maximum number of readings per second. Faster property reads
-      will be from the previous reading."""
+      will be from the previous reading.
+
+    **Quickstart: Importing and using the BME680**
+
+        Here is an example of using the :class:`BMP680_I2C` class.
+        First you will need to import the libraries to use the sensor
+
+        .. code-block:: python
+
+            import board
+            import adafruit_bme680
+
+        Once this is done you can define your `board.I2C` object and define your sensor object
+
+        .. code-block:: python
+
+            i2c = board.I2C()   # uses board.SCL and board.SDA
+            bme680 = adafruit_bme680.Adafruit_BME680_I2C(i2c)
+
+        You need to setup the pressure at sea level
+
+        .. code-block:: python
+
+            bme680.sea_level_pressure = 1013.25
+
+        Now you have access to the :attr:`temperature`, :attr:`gas`, :attr:`relative_humidity`,
+        :attr:`pressure` and :attr:`altitude` attributes
+
+        .. code-block:: python
+
+            temperature = bme680.temperature
+            gas = bme680.gas
+            relative_humidity = bme680.relative_humidity
+            pressure = bme680.pressure
+            altitude = bme680.altitude
+
+    """
 
     def __init__(self, i2c, address=0x77, debug=False, *, refresh_rate=10):
         """Initialize the I2C device at the 'address' given"""
@@ -423,12 +460,50 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
 class Adafruit_BME680_SPI(Adafruit_BME680):
     """Driver for SPI connected BME680.
 
-    :param busio.SPI spi: SPI device
-    :param digitalio.DigitalInOut cs: Chip Select
-    :param bool debug: Print debug statements when True.
-    :param int baudrate: Clock rate, default is 100000
+    :param ~busio.SPI spi: SPI device
+    :param ~digitalio.DigitalInOut cs: Chip Select
+    :param bool debug: Print debug statements when `True`. Defaults to `False`
+    :param int baudrate: Clock rate, default is :const:`100000`
     :param int refresh_rate: Maximum number of readings per second. Faster property reads
       will be from the previous reading.
+
+
+    **Quickstart: Importing and using the BME680**
+
+        Here is an example of using the :class:`BMP680_SPI` class.
+        First you will need to import the libraries to use the sensor
+
+        .. code-block:: python
+
+            import board
+            from digitalio import DigitalInOut, Direction
+            import adafruit_bme680
+
+        Once this is done you can define your `board.SPI` object and define your sensor object
+
+        .. code-block:: python
+
+            cs = digitalio.DigitalInOut(board.D10)
+            spi = board.SPI()
+            bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
+
+        You need to setup the pressure at sea level
+
+        .. code-block:: python
+
+            bme680.sea_level_pressure = 1013.25
+
+        Now you have access to the :attr:`temperature`, :attr:`gas`, :attr:`relative_humidity`,
+        :attr:`pressure` and :attr:`altitude` attributes
+
+        .. code-block:: python
+
+            temperature = bme680.temperature
+            gas = bme680.gas
+            relative_humidity = bme680.relative_humidity
+            pressure = bme680.pressure
+            altitude = bme680.altitude
+
     """
 
     def __init__(self, spi, cs, baudrate=100000, debug=False, *, refresh_rate=10):
