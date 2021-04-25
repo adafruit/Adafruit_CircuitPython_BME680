@@ -4,12 +4,11 @@
 import time
 import board
 import digitalio
-from busio import SPI
 import adafruit_bme680
 
-# Create library object using our Bus SPI port
+# Create sensor object, communicating over the board's default SPI bus
 cs = digitalio.DigitalInOut(board.D10)
-spi = SPI(board.SCK, MOSI=board.MOSI, MISO=board.MISO)
+spi = board.SPI()
 bme680 = adafruit_bme680.Adafruit_BME680_SPI(spi, cs)
 
 # change this to match the location's pressure (hPa) at sea level
