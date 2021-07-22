@@ -47,6 +47,7 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BME680.git"
 _BME680_CHIPID = const(0x61)
 
 _BME680_REG_CHIPID = const(0xD0)
+_BME68X_REG_VARIANT = const(0xF0)
 _BME680_BME680_COEFF_ADDR1 = const(0x89)
 _BME680_BME680_COEFF_ADDR2 = const(0xE1)
 _BME680_BME680_RES_HEAT_0 = const(0x5A)
@@ -134,6 +135,9 @@ class Adafruit_BME680:
         chip_id = self._read_byte(_BME680_REG_CHIPID)
         if chip_id != _BME680_CHIPID:
             raise RuntimeError("Failed to find BME680! Chip ID 0x%x" % chip_id)
+
+        # Get variant
+        self._chip_variant = self._read_byte(_BME68X_REG_VARIANT)
 
         self._read_calibration()
 
@@ -297,12 +301,21 @@ class Adafruit_BME680:
     def gas(self):
         """The gas resistance in ohms"""
         self._perform_reading()
-        var1 = (
-            (1340 + (5 * self._sw_err)) * (_LOOKUP_TABLE_1[self._gas_range])
-        ) / 65536
-        var2 = ((self._adc_gas * 32768) - 16777216) + var1
-        var3 = (_LOOKUP_TABLE_2[self._gas_range] * var1) / 512
-        calc_gas_res = (var3 + (var2 / 2)) / var2
+        if self._chip_variant == 0x01:
+            # taken from https://github.com/BoschSensortec/BME68x-Sensor-API
+            var1 = 262144 >> self._gas_range
+            var2 = self._adc_gas - 512
+            var2 *= 3
+            var2 = 4096 + var2
+            calc_gas_res = (1000 * var1) / var2
+            calc_gas_res = calc_gas_res * 100
+        else:
+            var1 = (
+                (1340 + (5 * self._sw_err)) * (_LOOKUP_TABLE_1[self._gas_range])
+            ) / 65536
+            var2 = ((self._adc_gas * 32768) - 16777216) + var1
+            var3 = (_LOOKUP_TABLE_2[self._gas_range] * var1) / 512
+            calc_gas_res = (var3 + (var2 / 2)) / var2
         return int(calc_gas_res)
 
     def _perform_reading(self):
@@ -321,14 +334,16 @@ class Adafruit_BME680:
         # turn on humidity oversample
         self._write(_BME680_REG_CTRL_HUM, [self._humidity_oversample])
         # gas measurements enabled
-        self._write(_BME680_REG_CTRL_GAS, [_BME680_RUNGAS])
-
+        if self._chip_variant == 0x01:
+            self._write(_BME680_REG_CTRL_GAS, [_BME680_RUNGAS << 1])
+        else:
+            self._write(_BME680_REG_CTRL_GAS, [_BME680_RUNGAS])
         ctrl = self._read_byte(_BME680_REG_CTRL_MEAS)
         ctrl = (ctrl & 0xFC) | 0x01  # enable single shot!
         self._write(_BME680_REG_CTRL_MEAS, [ctrl])
         new_data = False
         while not new_data:
-            data = self._read(_BME680_REG_MEAS_STATUS, 15)
+            data = self._read(_BME680_REG_MEAS_STATUS, 17)
             new_data = data[0] & 0x80 != 0
             time.sleep(0.005)
         self._last_reading = time.monotonic()
@@ -336,8 +351,12 @@ class Adafruit_BME680:
         self._adc_pres = _read24(data[2:5]) / 16
         self._adc_temp = _read24(data[5:8]) / 16
         self._adc_hum = struct.unpack(">H", bytes(data[8:10]))[0]
-        self._adc_gas = int(struct.unpack(">H", bytes(data[13:15]))[0] / 64)
-        self._gas_range = data[14] & 0x0F
+        if self._chip_variant == 0x01:
+            self._adc_gas = int(struct.unpack(">H", bytes(data[15:17]))[0] / 64)
+            self._gas_range = data[16] & 0x0F
+        else:
+            self._adc_gas = int(struct.unpack(">H", bytes(data[13:15]))[0] / 64)
+            self._gas_range = data[14] & 0x0F
 
         var1 = (self._adc_temp / 8) - (self._temp_calibration[0] * 2)
         var2 = (var1 * self._temp_calibration[1]) / 2048
