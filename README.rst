@@ -77,6 +77,11 @@ Usage Example
         time.sleep(2)
 
 
+Documentation
+=============
+
+API documentation for this library can be found on `Read the Docs <https://circuitpython.readthedocs.io/projects/bme680/en/latest/>`_.
+
 Contributing
 ============
 
