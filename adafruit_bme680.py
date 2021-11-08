@@ -280,10 +280,8 @@ class Adafruit_BME680:
         calc_hum = (((var3 + var6) / 1024) * 1000) / 4096
         calc_hum /= 1000  # get back to RH
 
-        if calc_hum > 100:
-            calc_hum = 100
-        if calc_hum < 0:
-            calc_hum = 0
+        calc_hum = min(calc_hum, 100)
+        calc_hum = max(calc_hum, 0)
         return calc_hum
 
     @property
