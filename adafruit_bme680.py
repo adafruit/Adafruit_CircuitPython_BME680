@@ -28,15 +28,10 @@ Implementation Notes
 * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 """
 
-
+import struct
 import time
 import math
 from micropython import const
-
-try:
-    import struct
-except ImportError:
-    import ustruct as struct
 
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BME680.git"
