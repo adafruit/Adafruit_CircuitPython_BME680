@@ -23,8 +23,13 @@ with open(path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
+    # Adafruit Bundle Information
     name="adafruit-circuitpython-bme680",
-    use_scm_version=True,
+    use_scm_version={
+        # This is needed for the PyPI version munging in the Github Actions release.yml
+        "git_describe_command": "git describe --tags --long",
+        "local_scheme": "no-local-version",
+    },
     setup_requires=["setuptools_scm"],
     description="CircuitPython library for BME680 temperature, pressure and humidity sensor.",
     long_description=long_description,
@@ -51,5 +56,7 @@ setup(
     "humidity gas",
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
+    # TODO: IF LIBRARY FILES ARE A PACKAGE FOLDER,
+    #       CHANGE `py_modules=['...']` TO `packages=['...']`
     py_modules=["adafruit_bme680"],
 )
