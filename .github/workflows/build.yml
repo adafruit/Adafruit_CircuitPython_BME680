@@ -52,6 +52,8 @@ jobs:
         pre-commit run --all-files
     - name: Build assets
       run: circuitpython-build-bundles --filename_prefix ${{ steps.repo-name.outputs.repo-name }} --library_location .
+    # This next step is missing from a small set of libraries
+    # It looks like it was specifically removed
     - name: Archive bundles
       uses: actions/upload-artifact@v2
       with:
