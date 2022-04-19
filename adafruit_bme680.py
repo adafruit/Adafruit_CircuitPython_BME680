@@ -33,6 +33,12 @@ import time
 import math
 from micropython import const
 
+try:
+    # Used only for type annotations.
+    from busio import I2C
+except ImportError:
+    pass
+
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BME680.git"
 
@@ -437,7 +443,14 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
 
     """
 
-    def __init__(self, i2c, address=0x77, debug=False, *, refresh_rate=10):
+    def __init__(
+        self,
+        i2c: I2C,
+        address: int = 0x77,
+        debug: bool = False,
+        *,
+        refresh_rate: int = 10
+    ) -> None:
         """Initialize the I2C device at the 'address' given"""
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
             i2c_device,
@@ -447,7 +460,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
         self._debug = debug
         super().__init__(refresh_rate=refresh_rate)
 
-    def _read(self, register, length):
+    def _read(self, register: int, length: int) -> bytearray:
         """Returns an array of 'length' bytes from the 'register'"""
         with self._i2c as i2c:
             i2c.write(bytes([register & 0xFF]))
@@ -457,7 +470,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
                 print("\t$%02X => %s" % (register, [hex(i) for i in result]))
             return result
 
-    def _write(self, register, values):
+    def _write(self, register: int, values: int) -> None:
         """Writes an array of 'length' bytes to the 'register'"""
         with self._i2c as i2c:
             buffer = bytearray(2 * len(values))
