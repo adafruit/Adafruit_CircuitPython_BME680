@@ -35,7 +35,8 @@ from micropython import const
 
 try:
     # Used only for type annotations.
-    from busio import I2C
+    from busio import I2C, SPI
+    from digitalio import DigitalInOut
 except ImportError:
     pass
 
@@ -531,7 +532,15 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
 
     """
 
-    def __init__(self, spi, cs, baudrate=100000, debug=False, *, refresh_rate=10):
+    def __init__(
+        self,
+        spi: SPI,
+        cs: DigitalInOut,
+        baudrate: int = 100000,
+        debug: bool = False,
+        *,
+        refresh_rate: int = 10
+    ):
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
             spi_device,
         )
@@ -540,7 +549,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
         self._debug = debug
         super().__init__(refresh_rate=refresh_rate)
 
-    def _read(self, register, length):
+    def _read(self, register: int, length: int):
         if register != _BME680_REG_STATUS:
             # _BME680_REG_STATUS exists in both SPI memory pages
             # For all other registers, we must set the correct memory page
@@ -555,7 +564,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
                 print("\t$%02X => %s" % (register, [hex(i) for i in result]))
             return result
 
-    def _write(self, register, values):
+    def _write(self, register: int, values: int):
         if register != _BME680_REG_STATUS:
             # _BME680_REG_STATUS exists in both SPI memory pages
             # For all other registers, we must set the correct memory page
@@ -570,7 +579,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             if self._debug:
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
 
-    def _set_spi_mem_page(self, register):
+    def _set_spi_mem_page(self, register: int):
         spi_mem_page = 0x00
         if register < 0x80:
             spi_mem_page = 0x10
