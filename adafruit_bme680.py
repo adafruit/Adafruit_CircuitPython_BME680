@@ -104,7 +104,7 @@ _LOOKUP_TABLE_2 = (
 )
 
 
-def _read24(arr):
+def _read24(arr: bytearray) -> float:
     """Parse an unsigned 24-bit value as a floating point and return it."""
     ret = 0.0
     # print([hex(i) for i in arr])
