@@ -35,8 +35,13 @@ from micropython import const
 
 try:
     # Used only for type annotations.
+
+    import typing  # pylint: disable=unused-import
+
+    from circuitpython_typing import ReadableBuffer
     from busio import I2C, SPI
     from digitalio import DigitalInOut
+
 except ImportError:
     pass
 
@@ -111,7 +116,7 @@ _LOOKUP_TABLE_2 = (
 )
 
 
-def _read24(arr: bytearray) -> float:
+def _read24(arr: ReadableBuffer) -> float:
     """Parse an unsigned 24-bit value as a floating point and return it."""
     ret = 0.0
     # print([hex(i) for i in arr])
@@ -392,10 +397,10 @@ class Adafruit_BME680:
         """Read a byte register value and return it"""
         return self._read(register, 1)[0]
 
-    def _read(self, register: int, length: int) -> None:
+    def _read(self, register: int, length: int) -> bytearray:
         raise NotImplementedError()
 
-    def _write(self, register: int, values) -> None:
+    def _write(self, register: int, values: bytearray) -> None:
         raise NotImplementedError()
 
 
@@ -471,7 +476,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
                 print("\t$%02X => %s" % (register, [hex(i) for i in result]))
             return result
 
-    def _write(self, register: int, values: int) -> None:
+    def _write(self, register: int, values: ReadableBuffer) -> None:
         """Writes an array of 'length' bytes to the 'register'"""
         with self._i2c as i2c:
             buffer = bytearray(2 * len(values))
@@ -540,7 +545,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
         debug: bool = False,
         *,
         refresh_rate: int = 10
-    ):
+    ) -> None:
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
             spi_device,
         )
@@ -549,7 +554,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
         self._debug = debug
         super().__init__(refresh_rate=refresh_rate)
 
-    def _read(self, register: int, length: int):
+    def _read(self, register: int, length: int) -> bytearray:
         if register != _BME680_REG_STATUS:
             # _BME680_REG_STATUS exists in both SPI memory pages
             # For all other registers, we must set the correct memory page
@@ -564,7 +569,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
                 print("\t$%02X => %s" % (register, [hex(i) for i in result]))
             return result
 
-    def _write(self, register: int, values: int):
+    def _write(self, register: int, values: ReadableBuffer) -> None:
         if register != _BME680_REG_STATUS:
             # _BME680_REG_STATUS exists in both SPI memory pages
             # For all other registers, we must set the correct memory page
@@ -579,7 +584,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             if self._debug:
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
 
-    def _set_spi_mem_page(self, register: int):
+    def _set_spi_mem_page(self, register: int) -> None:
         spi_mem_page = 0x00
         if register < 0x80:
             spi_mem_page = 0x10
