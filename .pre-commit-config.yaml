@@ -14,9 +14,9 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.2.0
     hooks:
-    -   id: check-yaml
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
 -   repo: https://github.com/pycqa/pylint
     rev: v2.11.1 # Some libraries may not have had this updated?
     hooks:
