@@ -33,6 +33,18 @@ import time
 import math
 from micropython import const
 
+try:
+    # Used only for type annotations.
+
+    import typing  # pylint: disable=unused-import
+
+    from circuitpython_typing import ReadableBuffer
+    from busio import I2C, SPI
+    from digitalio import DigitalInOut
+
+except ImportError:
+    pass
+
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BME680.git"
 
@@ -104,7 +116,7 @@ _LOOKUP_TABLE_2 = (
 )
 
 
-def _read24(arr):
+def _read24(arr: ReadableBuffer) -> float:
     """Parse an unsigned 24-bit value as a floating point and return it."""
     ret = 0.0
     # print([hex(i) for i in arr])
@@ -120,7 +132,7 @@ class Adafruit_BME680:
     :param int refresh_rate: Maximum number of readings per second. Faster property reads
       will be from the previous reading."""
 
-    def __init__(self, *, refresh_rate=10):
+    def __init__(self, *, refresh_rate: int = 10) -> None:
         """Check the BME680 was found, read the coefficients and enable the sensor for continuous
         reads."""
         self._write(_BME680_REG_SOFTRESET, [0xB6])
@@ -160,62 +172,62 @@ class Adafruit_BME680:
         self._min_refresh_time = 1 / refresh_rate
 
     @property
-    def pressure_oversample(self):
+    def pressure_oversample(self) -> int:
         """The oversampling for pressure sensor"""
         return _BME680_SAMPLERATES[self._pressure_oversample]
 
     @pressure_oversample.setter
-    def pressure_oversample(self, sample_rate):
+    def pressure_oversample(self, sample_rate: int) -> None:
         if sample_rate in _BME680_SAMPLERATES:
             self._pressure_oversample = _BME680_SAMPLERATES.index(sample_rate)
         else:
             raise RuntimeError("Invalid oversample")
 
     @property
-    def humidity_oversample(self):
+    def humidity_oversample(self) -> int:
         """The oversampling for humidity sensor"""
         return _BME680_SAMPLERATES[self._humidity_oversample]
 
     @humidity_oversample.setter
-    def humidity_oversample(self, sample_rate):
+    def humidity_oversample(self, sample_rate: int) -> None:
         if sample_rate in _BME680_SAMPLERATES:
             self._humidity_oversample = _BME680_SAMPLERATES.index(sample_rate)
         else:
             raise RuntimeError("Invalid oversample")
 
     @property
-    def temperature_oversample(self):
+    def temperature_oversample(self) -> int:
         """The oversampling for temperature sensor"""
         return _BME680_SAMPLERATES[self._temp_oversample]
 
     @temperature_oversample.setter
-    def temperature_oversample(self, sample_rate):
+    def temperature_oversample(self, sample_rate: int) -> None:
         if sample_rate in _BME680_SAMPLERATES:
             self._temp_oversample = _BME680_SAMPLERATES.index(sample_rate)
         else:
             raise RuntimeError("Invalid oversample")
 
     @property
-    def filter_size(self):
+    def filter_size(self) -> int:
         """The filter size for the built in IIR filter"""
         return _BME680_FILTERSIZES[self._filter]
 
     @filter_size.setter
-    def filter_size(self, size):
+    def filter_size(self, size: int) -> None:
         if size in _BME680_FILTERSIZES:
             self._filter = _BME680_FILTERSIZES.index(size)
         else:
             raise RuntimeError("Invalid size")
 
     @property
-    def temperature(self):
+    def temperature(self) -> float:
         """The compensated temperature in degrees Celsius."""
         self._perform_reading()
         calc_temp = ((self._t_fine * 5) + 128) / 256
         return calc_temp / 100
 
     @property
-    def pressure(self):
+    def pressure(self) -> float:
         """The barometric pressure in hectoPascals"""
         self._perform_reading()
         var1 = (self._t_fine / 2) - 64000
@@ -242,12 +254,12 @@ class Adafruit_BME680:
         return calc_pres / 100
 
     @property
-    def relative_humidity(self):
+    def relative_humidity(self) -> float:
         """The relative humidity in RH %"""
         return self.humidity
 
     @property
-    def humidity(self):
+    def humidity(self) -> float:
         """The relative humidity in RH %"""
         self._perform_reading()
         temp_scaled = ((self._t_fine * 5) + 128) / 256
@@ -284,14 +296,14 @@ class Adafruit_BME680:
         return calc_hum
 
     @property
-    def altitude(self):
+    def altitude(self) -> float:
         """The altitude based on current :attr:`pressure` vs the sea level pressure
         (:attr:`sea_level_pressure`) - which you must enter ahead of time)"""
         pressure = self.pressure  # in Si units for hPascal
         return 44330 * (1.0 - math.pow(pressure / self.sea_level_pressure, 0.1903))
 
     @property
-    def gas(self):
+    def gas(self) -> int:
         """The gas resistance in ohms"""
         self._perform_reading()
         if self._chip_variant == 0x01:
@@ -311,7 +323,7 @@ class Adafruit_BME680:
             calc_gas_res = (var3 + (var2 / 2)) / var2
         return int(calc_gas_res)
 
-    def _perform_reading(self):
+    def _perform_reading(self) -> None:
         """Perform a single-shot reading from the sensor and fill internal data structure for
         calculations"""
         if time.monotonic() - self._last_reading < self._min_refresh_time:
@@ -357,7 +369,7 @@ class Adafruit_BME680:
         var3 = (var3 * self._temp_calibration[2] * 16) / 16384
         self._t_fine = int(var2 + var3)
 
-    def _read_calibration(self):
+    def _read_calibration(self) -> None:
         """Read & save the calibration coefficients"""
         coeff = self._read(_BME680_BME680_COEFF_ADDR1, 25)
         coeff += self._read(_BME680_BME680_COEFF_ADDR2, 16)
@@ -381,14 +393,14 @@ class Adafruit_BME680:
         self._heat_val = self._read_byte(0x00)
         self._sw_err = (self._read_byte(0x04) & 0xF0) / 16
 
-    def _read_byte(self, register):
+    def _read_byte(self, register: int) -> int:
         """Read a byte register value and return it"""
         return self._read(register, 1)[0]
 
-    def _read(self, register, length):
+    def _read(self, register: int, length: int) -> bytearray:
         raise NotImplementedError()
 
-    def _write(self, register, values):
+    def _write(self, register: int, values: bytearray) -> None:
         raise NotImplementedError()
 
 
@@ -437,7 +449,14 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
 
     """
 
-    def __init__(self, i2c, address=0x77, debug=False, *, refresh_rate=10):
+    def __init__(
+        self,
+        i2c: I2C,
+        address: int = 0x77,
+        debug: bool = False,
+        *,
+        refresh_rate: int = 10
+    ) -> None:
         """Initialize the I2C device at the 'address' given"""
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
             i2c_device,
@@ -447,7 +466,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
         self._debug = debug
         super().__init__(refresh_rate=refresh_rate)
 
-    def _read(self, register, length):
+    def _read(self, register: int, length: int) -> bytearray:
         """Returns an array of 'length' bytes from the 'register'"""
         with self._i2c as i2c:
             i2c.write(bytes([register & 0xFF]))
@@ -457,7 +476,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
                 print("\t$%02X => %s" % (register, [hex(i) for i in result]))
             return result
 
-    def _write(self, register, values):
+    def _write(self, register: int, values: ReadableBuffer) -> None:
         """Writes an array of 'length' bytes to the 'register'"""
         with self._i2c as i2c:
             buffer = bytearray(2 * len(values))
@@ -518,7 +537,15 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
 
     """
 
-    def __init__(self, spi, cs, baudrate=100000, debug=False, *, refresh_rate=10):
+    def __init__(
+        self,
+        spi: SPI,
+        cs: DigitalInOut,
+        baudrate: int = 100000,
+        debug: bool = False,
+        *,
+        refresh_rate: int = 10
+    ) -> None:
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
             spi_device,
         )
@@ -527,7 +554,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
         self._debug = debug
         super().__init__(refresh_rate=refresh_rate)
 
-    def _read(self, register, length):
+    def _read(self, register: int, length: int) -> bytearray:
         if register != _BME680_REG_STATUS:
             # _BME680_REG_STATUS exists in both SPI memory pages
             # For all other registers, we must set the correct memory page
@@ -542,7 +569,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
                 print("\t$%02X => %s" % (register, [hex(i) for i in result]))
             return result
 
-    def _write(self, register, values):
+    def _write(self, register: int, values: ReadableBuffer) -> None:
         if register != _BME680_REG_STATUS:
             # _BME680_REG_STATUS exists in both SPI memory pages
             # For all other registers, we must set the correct memory page
@@ -557,7 +584,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             if self._debug:
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
 
-    def _set_spi_mem_page(self, register):
+    def _set_spi_mem_page(self, register: int) -> None:
         spi_mem_page = 0x00
         if register < 0x80:
             spi_mem_page = 0x10
