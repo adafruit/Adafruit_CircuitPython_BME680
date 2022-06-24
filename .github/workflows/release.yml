@@ -40,9 +40,15 @@ jobs:
       with:
         repository: adafruit/actions-ci-circuitpython-libs
         path: actions-ci
-    - name: Install deps
+    - name: Install repo, dependencies
+      # This is basically a modified version of actions-ci-circuitpython-libs
+      # so basically that will be what changes instead of it being here
       run: |
-        source actions-ci/install.sh
+        sudo apt-get update
+        sudo apt-get install libudev-dev libusb-1.0
+        sudo apt-get install -y gettext
+        pip install circuitpython-build-tools
+        pip install .
     - name: Build assets
       run: circuitpython-build-bundles --filename_prefix ${{ steps.repo-name.outputs.repo-name }} --library_location .
     - name: Upload Release Assets
@@ -61,25 +67,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Check For setup.py
+    - - name: Check For pyproject.toml
       id: need-pypi
       run: |
-        echo ::set-output name=setup-py::$( find . -wholename './setup.py' )
+        echo ::set-output name=pyproject-toml::$( find . -wholename './pyproject.toml' )
     - name: Set up Python
-      if: contains(steps.need-pypi.outputs.setup-py, 'setup.py')
+      if: contains(steps.need-pypi.outputs.pyproject-toml, 'pyproject.toml')
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
     - name: Install dependencies
-      if: contains(steps.need-pypi.outputs.setup-py, 'setup.py')
+      if: contains(steps.need-pypi.outputs.pyproject-toml, 'pyproject.toml')
       run: |
         python -m pip install --upgrade pip
-        pip install setuptools wheel twine
+        pip install setuptools build twine
     - name: Build and publish
-      if: contains(steps.need-pypi.outputs.setup-py, 'setup.py')
+      if: contains(steps.need-pypi.outputs.pyproject-toml, 'pyproject.toml')
       env:
         TWINE_USERNAME: ${{ secrets.pypi_username }}
         TWINE_PASSWORD: ${{ secrets.pypi_password }}
       run: |
-        python setup.py sdist
+        python -m build
         twine upload dist/*
