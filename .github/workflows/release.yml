@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - - name: Check For pyproject.toml
+    - name: Check For pyproject.toml
       id: need-pypi
       run: |
         echo ::set-output name=pyproject-toml::$( find . -wholename './pyproject.toml' )
