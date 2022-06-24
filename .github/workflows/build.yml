@@ -68,7 +68,7 @@ jobs:
     - name: Check For pyproject.toml
       id: need-pypi
       run: |
-        echo ::set-output name=pyproject-toml::$( find . -wholename './setup.py' )
+        echo ::set-output name=pyproject-toml::$( find . -wholename './pyproject.toml' )
     - name: Build Python package
       if: contains(steps.need-pypi.outputs.pyproject-toml, 'pyproject.toml')
       run: |
