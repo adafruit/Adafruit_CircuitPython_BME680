@@ -42,5 +42,5 @@ dynamic = ["version"]
 
 [tool.setuptools_scm]
 
-[tools.setuptools]
+[tool.setuptools]
 py-modules = ["adafruit_bme680"]
