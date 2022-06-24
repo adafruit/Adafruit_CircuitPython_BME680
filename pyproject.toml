@@ -41,3 +41,6 @@ dependencies = [
 dynamic = ["version"]
 
 [tool.setuptools_scm]
+
+[tools.setuptools]
+py-modules = ["adafruit_bme680"]
