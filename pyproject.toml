@@ -39,3 +39,5 @@ dependencies = [
     "adafruit-circuitpython-busdevice ~= 5.1",
 ]
 dynamic = ["version"]
+
+[tool.setuptools_scm]
