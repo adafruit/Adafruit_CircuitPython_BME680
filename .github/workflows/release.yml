@@ -40,7 +40,7 @@ jobs:
       with:
         repository: adafruit/actions-ci-circuitpython-libs
         path: actions-ci
-    - name: Install dependencies
+    - name: Install deps
       run: |
         source actions-ci/install.sh
     - name: Build assets
