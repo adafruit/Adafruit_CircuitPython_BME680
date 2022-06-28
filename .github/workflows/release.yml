@@ -41,14 +41,9 @@ jobs:
         repository: adafruit/actions-ci-circuitpython-libs
         path: actions-ci
     - name: Install repo, dependencies
-      # This is basically a modified version of actions-ci-circuitpython-libs
-      # so basically that will be what changes instead of it being here
+      # (e.g. - apt-get: gettext, etc; pip: circuitpython-build-tools, requirements.txt; etc.)
       run: |
-        sudo apt-get update
-        sudo apt-get install libudev-dev libusb-1.0
-        sudo apt-get install -y gettext
-        pip install circuitpython-build-tools
-        pip install .
+        source actions-ci/install.sh
     - name: Build assets
       run: circuitpython-build-bundles --filename_prefix ${{ steps.repo-name.outputs.repo-name }} --library_location .
     - name: Upload Release Assets
