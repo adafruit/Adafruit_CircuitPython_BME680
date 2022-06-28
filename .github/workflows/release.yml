@@ -40,8 +40,7 @@ jobs:
       with:
         repository: adafruit/actions-ci-circuitpython-libs
         path: actions-ci
-    - name: Install repo, dependencies
-      # (e.g. - apt-get: gettext, etc; pip: circuitpython-build-tools, requirements.txt; etc.)
+    - name: Install dependencies
       run: |
         source actions-ci/install.sh
     - name: Build assets
