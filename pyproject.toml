@@ -34,13 +34,12 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
 ]
-dependencies = [
-    "Adafruit-Blinka",
-    "adafruit-circuitpython-busdevice ~= 5.1",
-]
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
 
 [tool.setuptools]
 py-modules = ["adafruit_bme680"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools_scm]
