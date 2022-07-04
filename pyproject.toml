@@ -13,6 +13,10 @@ requires = [
 name = "adafruit-circuitpython-bme680"
 description = "CircuitPython driver for BME680 sensor over I2C"
 readme = "README.rst"
+authors = [
+    {name = "Adafruit Industries", email = "circuitpython@adafruit.com"}
+]
+urls = {Homepage = "https://github.com/adafruit/Adafruit_CircuitPython_BME680"} 
 keywords = [
     "adafruit",
     "blinka",
