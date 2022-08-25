@@ -42,6 +42,8 @@ classifiers = [
 dynamic = ["dependencies"]
 
 [tool.setuptools]
+# TODO: IF LIBRARY FILES ARE A PACKAGE FOLDER,
+#       CHANGE `py_modules = ['...']` TO `packages = ['...']`
 py-modules = ["adafruit_bme680"]
 
 [tool.setuptools.dynamic]
