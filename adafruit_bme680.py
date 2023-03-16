@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2017 ladyada for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
+
 # garberw added begin  ===========================
 #
 # BOSCH LICENSE
@@ -78,7 +79,7 @@ from micropython import const
 
 
 def delay_microseconds(nusec):
-    """fixme must be same as dev->delay_us"""
+    """HELP must be same as dev->delay_us"""
     time.sleep(nusec / 1000000.0)
 
 try:
@@ -568,7 +569,7 @@ class Adafruit_BME680:
                                            _BME68X_RUN_GAS_POS, run_gas)
             self._write(ctrl_gas_addr_0, [ ctrl_gas_data_0 ])
             self._write(ctrl_gas_addr_1, [ ctrl_gas_data_1 ])
-            # fixme check this
+            # HELP check this
             self._set_op_mode(_BME68X_FORCED_MODE)
         except GasHeaterException as exc:
             self._set_op_mode(_BME68X_FORCED_MODE)
@@ -591,7 +592,7 @@ class Adafruit_BME680:
                 if pow_mode != _BME68X_SLEEP_MODE:
                     tmp_pow_mode &= ~_BME68X_MODE_MSK  # Set to sleep
                     self._write(reg_addr, [ tmp_pow_mode ])
-                    # dev->delay_us(_BME68X_PERIOD_POLL, dev->intf_ptr)  # fixme
+                    # dev->delay_us(_BME68X_PERIOD_POLL, dev->intf_ptr)  # HELP
                     delay_microseconds(_BME68X_PERIOD_POLL)
             # Already in sleep
             if op_mode != _BME68X_SLEEP_MODE:
@@ -627,8 +628,7 @@ class Adafruit_BME680:
         htv: INT8  = self._heat_val
         amb: UINT8 = self._amb_temp
 
-        if temp > 400:  # Cap temperature
-            temp = 400
+        temp = min(temp, 400)   # Cap temperature
 
         var1: INT32 = ((INT32(amb) * gh3) / 1000) * 256
         var2: INT32 = (gh1 + 784) * (((((gh2 + 154009) * temp * 5) / 100) + 3276800) / 10)
@@ -651,8 +651,7 @@ class Adafruit_BME680:
         htv: float = float(self._heat_val)
         amb: float = float(self._amb_temp)
 
-        if temp > 400:  # Cap temperature
-            temp = 400
+        temp = min(temp, 400)   # Cap temperature
 
         var1: float = ((gh1 / (16.0)) + 49.0)
         var2: float = (((gh2 / (32768.0)) * (0.0005)) + 0.00235)
