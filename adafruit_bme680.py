@@ -5,7 +5,6 @@
 # We have a lot of attributes for this complex sensor.
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=no_self_use
-# pylint: disable=consider-using-f-string
 
 """
 `adafruit_bme680`
@@ -14,10 +13,7 @@
 CircuitPython library for BME680 temperature, pressure and humidity sensor.
 
 
-* Author(s): Limor Fried
-
-
-original Adafruit_BME680 with addition of set_gas_heater().  Other new members are private.
+* Author(s): Limor Fried, William Garber, many others
 
 
 Implementation Notes
@@ -61,7 +57,6 @@ __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_BME680.git"
 
 
-# garberw added begin  ===========================
 #    I2C ADDRESS/BITS/SETTINGS NEW
 #    -----------------------------------------------------------------------
 _BME68X_ENABLE_HEATER = const(0x00)
@@ -83,8 +78,6 @@ _BME68X_PERIOD_POLL = const(10000)
 _BME68X_REG_CTRL_GAS_0 = const(0x70)
 _BME68X_REG_CTRL_GAS_1 = const(0x71)
 
-
-# garberw added end  ===========================
 #    I2C ADDRESS/BITS/SETTINGS
 #    -----------------------------------------------------------------------
 _BME680_CHIPID = const(0x61)
@@ -152,15 +145,6 @@ _LOOKUP_TABLE_2 = (
 )
 
 
-# garberw added begin  ===========================
-INT32 = int
-INT16 = int
-INT8 = int
-UINT32 = int
-UINT16 = int
-UINT8 = int
-
-
 def bme_set_bits(reg_data, bitname_msk, bitname_pos, data):
     """
     Macro to set bits
@@ -178,17 +162,6 @@ def bme_set_bits_pos_0(reg_data, bitname_msk, data):
     return (reg_data & ~bitname_msk) | (data & bitname_msk)
 
 
-class GasHeaterException(Exception):
-    """
-    Error during set_gas_heater()
-    """
-
-    def __init__(self, msg="GasHeaterException default"):
-        self.msg = msg
-        super().__init__(msg)
-
-
-# garberw added end ===========================
 def _read24(arr: ReadableBuffer) -> float:
     """Parse an unsigned 24-bit value as a floating point and return it."""
     ret = 0.0
@@ -244,11 +217,8 @@ class Adafruit_BME680:
         self._last_reading = 0
         self._min_refresh_time = 1 / refresh_rate
 
-        # garberw added begin ===========================
         self._amb_temp = 25  # Copy required parameters from reference bme68x_dev struct
         self.set_gas_heater(320, 150)  # heater 320 deg C for 150 msec
-
-        # garberw added end ===========================
 
     @property
     def pressure_oversample(self) -> int:
@@ -482,42 +452,37 @@ class Adafruit_BME680:
     def _write(self, register: int, values: bytearray) -> None:
         raise NotImplementedError()
 
-    # garberw added begin ===========================
-    def set_gas_heater(self, heater_temp: UINT16, heater_time: UINT16) -> bool:
+    def set_gas_heater(self, heater_temp: int, heater_time: int) -> bool:
         """
-        *  @brief  Enable and configure gas reading + heater
-        *  @param  heater_temp
-        *          Desired temperature in degrees Centigrade
-        *  @param  heater_time
-        *          Time to keep heater on in milliseconds
-        *  @return True on success, False on failure
+        Enable and configure gas reading + heater
+        :param  heater_temp: Desired temperature in degrees Centigrade
+        :param  heater_time: Time to keep heater on in milliseconds
+        :return: True on success, False on failure
         """
-        if (heater_temp == 0) or (heater_time == 0):
+        if not heater_temp or not heater_time:
             return False
         # enable = BME68X_ENABLE
         try:
             self._set_heatr_conf(heater_temp, heater_time)
-        except GasHeaterException:
+        except OSError:
             return False
         return True
 
-    def _set_heatr_conf(self, heater_temp: UINT16, heater_time: UINT16) -> None:
+    def _set_heatr_conf(self, heater_temp: int, heater_time: int) -> None:
         # restrict to BME68X_FORCED_MODE
-        op_mode: UINT8 = _BME68X_FORCED_MODE
+        op_mode: int = _BME68X_FORCED_MODE
         # restrict to enable = True
         enable: bool = True
-        nb_conv: UINT8 = 0
-        hctrl: UINT8 = _BME68X_ENABLE_HEATER
-        run_gas: UINT8 = 0
-        ctrl_gas_data_0: UINT8 = 0
-        ctrl_gas_data_1: UINT8 = 0
-        ctrl_gas_addr_0: UINT8 = _BME68X_REG_CTRL_GAS_0
-        ctrl_gas_addr_1: UINT8 = _BME68X_REG_CTRL_GAS_1
+        nb_conv: int = 0
+        hctrl: int = _BME68X_ENABLE_HEATER
+        run_gas: int = 0
+        ctrl_gas_data_0: int = 0
+        ctrl_gas_data_1: int = 0
         try:
             self._set_op_mode(_BME68X_SLEEP_MODE)
             self._set_conf(heater_temp, heater_time, op_mode)
-            ctrl_gas_data_0 = self._read_byte(ctrl_gas_addr_0)
-            ctrl_gas_data_1 = self._read_byte(ctrl_gas_addr_1)
+            ctrl_gas_data_0 = self._read_byte(_BME68X_REG_CTRL_GAS_0)
+            ctrl_gas_data_1 = self._read_byte(_BME68X_REG_CTRL_GAS_1)
             if enable:
                 hctrl = _BME68X_ENABLE_HEATER
                 if self._chip_variant == _BME68X_VARIANT_GAS_HIGH:
@@ -537,86 +502,75 @@ class Adafruit_BME680:
             ctrl_gas_data_1 = bme_set_bits(
                 ctrl_gas_data_1, _BME68X_RUN_GAS_MSK, _BME68X_RUN_GAS_POS, run_gas
             )
-            self._write(ctrl_gas_addr_0, [ctrl_gas_data_0])
-            self._write(ctrl_gas_addr_1, [ctrl_gas_data_1])
+            self._write(_BME68X_REG_CTRL_GAS_0, [ctrl_gas_data_0])
+            self._write(_BME68X_REG_CTRL_GAS_1, [ctrl_gas_data_1])
             # HELP check this
             self._set_op_mode(_BME68X_FORCED_MODE)
-        except GasHeaterException as exc:
+        except OSError as exc:
             self._set_op_mode(_BME68X_FORCED_MODE)
             raise exc
 
-    def _set_op_mode(self, op_mode: UINT8) -> None:
+    def _set_op_mode(self, op_mode: int) -> None:
         """
         * @brief This API is used to set the operation mode of the sensor
         """
-        tmp_pow_mode: UINT8 = 0
-        pow_mode: UINT8 = _BME68X_FORCED_MODE
-        reg_addr: UINT8 = _BME680_REG_CTRL_MEAS
+        tmp_pow_mode: int = 0
+        pow_mode: int = _BME68X_FORCED_MODE
         # Call until in sleep
-        try:
-            # was a do {} while() loop
-            while pow_mode != _BME68X_SLEEP_MODE:
-                tmp_pow_mode = self._read_byte(_BME680_REG_CTRL_MEAS)
-                # Put to sleep before changing mode
-                pow_mode = tmp_pow_mode & _BME68X_MODE_MSK
-                if pow_mode != _BME68X_SLEEP_MODE:
-                    tmp_pow_mode &= ~_BME68X_MODE_MSK  # Set to sleep
-                    self._write(reg_addr, [tmp_pow_mode])
-                    # dev->delay_us(_BME68X_PERIOD_POLL, dev->intf_ptr)  # HELP
-                    delay_microseconds(_BME68X_PERIOD_POLL)
-            # Already in sleep
-            if op_mode != _BME68X_SLEEP_MODE:
-                tmp_pow_mode = (tmp_pow_mode & ~_BME68X_MODE_MSK) | (
-                    op_mode & _BME68X_MODE_MSK
-                )
-                self._write(reg_addr, [tmp_pow_mode])
-        except GasHeaterException as exc:
-            raise exc
 
-    def _set_conf(
-        self, heater_temp: UINT16, heater_time: UINT16, op_mode: UINT8
-    ) -> None:
+        # was a do {} while() loop
+        while pow_mode != _BME68X_SLEEP_MODE:
+            tmp_pow_mode = self._read_byte(_BME680_REG_CTRL_MEAS)
+            # Put to sleep before changing mode
+            pow_mode = tmp_pow_mode & _BME68X_MODE_MSK
+            if pow_mode != _BME68X_SLEEP_MODE:
+                tmp_pow_mode &= ~_BME68X_MODE_MSK  # Set to sleep
+                self._write(_BME680_REG_CTRL_MEAS, [tmp_pow_mode])
+                # dev->delay_us(_BME68X_PERIOD_POLL, dev->intf_ptr)  # HELP
+                delay_microseconds(_BME68X_PERIOD_POLL)
+        # Already in sleep
+        if op_mode != _BME68X_SLEEP_MODE:
+            tmp_pow_mode = (tmp_pow_mode & ~_BME68X_MODE_MSK) | (
+                op_mode & _BME68X_MODE_MSK
+            )
+            self._write(_BME680_REG_CTRL_MEAS, [tmp_pow_mode])
+
+    def _set_conf(self, heater_temp: int, heater_time: int, op_mode: int) -> None:
         """
         This internal API is used to set heater configurations
         """
-        try:
-            if op_mode != _BME68X_FORCED_MODE:
-                raise GasHeaterException("_set_conf not forced mode")
-            rh_reg_addr: UINT8 = _BME680_BME680_RES_HEAT_0
-            rh_reg_data: UINT8 = self._calc_res_heat(heater_temp)
-            gw_reg_addr: UINT8 = _BME680_BME680_GAS_WAIT_0
-            gw_reg_data: UINT8 = self._calc_gas_wait(heater_time)
-            self._write(rh_reg_addr, [rh_reg_data])
-            self._write(gw_reg_addr, [gw_reg_data])
-        except GasHeaterException as exc:
-            raise exc
 
-    def _calc_res_heat(self, temp: UINT16) -> UINT8:
+        if op_mode != _BME68X_FORCED_MODE:
+            raise OSError("GasHeaterException: _set_conf not forced mode")
+        rh_reg_data: int = self._calc_res_heat(heater_temp)
+        gw_reg_data: int = self._calc_gas_wait(heater_time)
+        self._write(_BME680_BME680_RES_HEAT_0, [rh_reg_data])
+        self._write(_BME680_BME680_GAS_WAIT_0, [gw_reg_data])
+
+    def _calc_res_heat(self, temp: int) -> int:
         """
         This internal API is used to calculate the heater resistance value using float
         """
-        gh1: INT8 = self._gas_calibration[0]
-        gh2: INT16 = self._gas_calibration[1]
-        gh3: INT8 = self._gas_calibration[2]
-        htr: UINT8 = self._heat_range
-        htv: INT8 = self._heat_val
-        amb: UINT8 = self._amb_temp
+        gh1: int = self._gas_calibration[0]
+        gh2: int = self._gas_calibration[1]
+        gh3: int = self._gas_calibration[2]
+        htr: int = self._heat_range
+        htv: int = self._heat_val
+        amb: int = self._amb_temp
 
         temp = min(temp, 400)  # Cap temperature
 
-        var1: INT32 = ((INT32(amb) * gh3) / 1000) * 256
-        var2: INT32 = (gh1 + 784) * (
-            ((((gh2 + 154009) * temp * 5) / 100) + 3276800) / 10
-        )
-        var3: INT32 = var1 + (var2 / 2)
-        var4: INT32 = var3 / (htr + 4)
-        var5: INT32 = (131 * htv) + 65536
-        heatr_res_x100: INT32 = INT32(((var4 / var5) - 250) * 34)
-        heatr_res: UINT8 = UINT8((heatr_res_x100 + 50) / 100)
+        var1: int = ((int(amb) * gh3) / 1000) * 256
+        var2: int = (gh1 + 784) * (((((gh2 + 154009) * temp * 5) / 100) + 3276800) / 10)
+        var3: int = var1 + (var2 / 2)
+        var4: int = var3 / (htr + 4)
+        var5: int = (131 * htv) + 65536
+        heatr_res_x100: int = int(((var4 / var5) - 250) * 34)
+        heatr_res: int = int((heatr_res_x100 + 50) / 100)
 
         return heatr_res
 
-    def _calc_res_heat(self, temp: UINT16) -> UINT8:
+    def _calc_res_heat(self, temp: int) -> int:
         """
         This internal API is used to calculate the heater resistance value
         """
@@ -634,27 +588,25 @@ class Adafruit_BME680:
         var3: float = gh3 / (1024.0)
         var4: float = var1 * (1.0 + (var2 * float(temp)))
         var5: float = var4 + (var3 * amb)
-        res_heat: UINT8 = UINT8(
+        res_heat: int = int(
             3.4 * ((var5 * (4 / (4 + htr)) * (1 / (1 + (htv * 0.002)))) - 25)
         )
         return res_heat
 
-    def _calc_gas_wait(self, dur: UINT16) -> UINT8:
+    def _calc_gas_wait(self, dur: int) -> int:
         """
         This internal API is used to calculate the gas wait
         """
-        factor: UINT8 = 0
-        durval: UINT8 = 0xFF  # Max duration
+        factor: int = 0
+        durval: int = 0xFF  # Max duration
 
         if dur < 0xFC0:
             return durval
         while dur > 0x3F:
             dur = dur / 4
             factor += 1
-        durval = UINT8(dur + (factor * 64))
+        durval = int(dur + (factor * 64))
         return durval
-
-    # garberw added end ===========================
 
 
 class Adafruit_BME680_I2C(Adafruit_BME680):
