@@ -482,30 +482,29 @@ class Adafruit_BME680:
     def _write(self, register: int, values: bytearray) -> None:
         raise NotImplementedError()
 
-    # garberw added begin ===========================
     def set_gas_heater(self, heater_temp: UINT16, heater_time: UINT16) -> bool:
         """
-        *  @brief  Enable and configure gas reading + heater
+        *  @brief  Enable and configure gas reading + heater (0 disables)
         *  @param  heater_temp
         *          Desired temperature in degrees Centigrade
         *  @param  heater_time
         *          Time to keep heater on in milliseconds
         *  @return True on success, False on failure
         """
-        if (heater_temp == 0) or (heater_time == 0):
-            return False
-        # enable = BME68X_ENABLE
         try:
-            self._set_heatr_conf(heater_temp, heater_time)
+            if (heater_temp == 0) or (heater_time == 0):
+                self._set_heatr_conf(heater_temp, heater_time, enable=False)
+            else:
+                self._set_heatr_conf(heater_temp, heater_time)
         except GasHeaterException:
             return False
         return True
 
-    def _set_heatr_conf(self, heater_temp: UINT16, heater_time: UINT16) -> None:
+    def _set_heatr_conf(
+        self, heater_temp: UINT16, heater_time: UINT16, enable: bool = True
+    ) -> None:
         # restrict to BME68X_FORCED_MODE
         op_mode: UINT8 = _BME68X_FORCED_MODE
-        # restrict to enable = True
-        enable: bool = True
         nb_conv: UINT8 = 0
         hctrl: UINT8 = _BME68X_ENABLE_HEATER
         run_gas: UINT8 = 0
