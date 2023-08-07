@@ -391,7 +391,7 @@ class Adafruit_BME680:
             var2 = self._adc_gas - 512
             var2 *= 3
             var2 = 4096 + var2
-            calc_gas_res = (1000 * var1) / var2
+            calc_gas_res = (10000 * var1) / var2
             calc_gas_res = calc_gas_res * 100
         else:
             var1 = (
