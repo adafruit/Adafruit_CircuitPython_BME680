@@ -505,10 +505,8 @@ class Adafruit_BME680:
             self._write(_BME68X_REG_CTRL_GAS_0, [ctrl_gas_data_0])
             self._write(_BME68X_REG_CTRL_GAS_1, [ctrl_gas_data_1])
             # HELP check this
+        finally:
             self._set_op_mode(_BME68X_FORCED_MODE)
-        except OSError as exc:
-            self._set_op_mode(_BME68X_FORCED_MODE)
-            raise exc
 
     def _set_op_mode(self, op_mode: int) -> None:
         """
