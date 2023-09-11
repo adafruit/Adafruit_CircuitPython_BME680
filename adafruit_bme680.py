@@ -361,7 +361,7 @@ class Adafruit_BME680:
             var2 = self._adc_gas - 512
             var2 *= 3
             var2 = 4096 + var2
-            calc_gas_res = (1000 * var1) / var2
+            calc_gas_res = (10000 * var1) / var2
             calc_gas_res = calc_gas_res * 100
         else:
             var1 = (
@@ -454,25 +454,25 @@ class Adafruit_BME680:
 
     def set_gas_heater(self, heater_temp: int, heater_time: int) -> bool:
         """
-        Enable and configure gas reading + heater
+        Enable and configure gas reading + heater (None disables)
         :param  heater_temp: Desired temperature in degrees Centigrade
         :param  heater_time: Time to keep heater on in milliseconds
         :return: True on success, False on failure
         """
-        if not heater_temp or not heater_time:
-            return False
-        # enable = BME68X_ENABLE
         try:
-            self._set_heatr_conf(heater_temp, heater_time)
+            if (heater_temp is None) or (heater_time is None):
+                self._set_heatr_conf(heater_temp or 0, heater_time or 0, enable=False)
+            else:
+                self._set_heatr_conf(heater_temp, heater_time)
         except OSError:
             return False
         return True
 
-    def _set_heatr_conf(self, heater_temp: int, heater_time: int) -> None:
+    def _set_heatr_conf(
+        self, heater_temp: int, heater_time: int, enable: bool = True
+    ) -> None:
         # restrict to BME68X_FORCED_MODE
         op_mode: int = _BME68X_FORCED_MODE
-        # restrict to enable = True
-        enable: bool = True
         nb_conv: int = 0
         hctrl: int = _BME68X_ENABLE_HEATER
         run_gas: int = 0
