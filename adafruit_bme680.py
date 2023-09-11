@@ -484,7 +484,7 @@ class Adafruit_BME680:
 
     def set_gas_heater(self, heater_temp: UINT16, heater_time: UINT16) -> bool:
         """
-        *  @brief  Enable and configure gas reading + heater (0 disables)
+        *  @brief  Enable and configure gas reading + heater (None disables)
         *  @param  heater_temp
         *          Desired temperature in degrees Centigrade
         *  @param  heater_time
@@ -492,8 +492,8 @@ class Adafruit_BME680:
         *  @return True on success, False on failure
         """
         try:
-            if (heater_temp == 0) or (heater_time == 0):
-                self._set_heatr_conf(heater_temp, heater_time, enable=False)
+            if (heater_temp is None) or (heater_time is None):
+                self._set_heatr_conf(heater_temp or 0, heater_time or 0, enable=False)
             else:
                 self._set_heatr_conf(heater_temp, heater_time)
         except GasHeaterException:
