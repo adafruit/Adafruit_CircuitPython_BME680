@@ -602,7 +602,7 @@ class Adafruit_BME680:
         factor: int = 0
         durval: int = 0xFF  # Max duration
 
-        if dur > 0xFC0:
+        if dur >= 0xFC0:
             return durval
         while dur > 0x3F:
             dur = dur / 4
