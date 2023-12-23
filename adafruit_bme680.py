@@ -207,6 +207,9 @@ class Adafruit_BME680:
         self._humidity_oversample = 0b010
         self._filter = 0b010
 
+        # Gas measurements, as a mask applied to _BME680_RUNGAS
+        self._run_gas = 0xFF
+
         self._adc_pres = None
         self._adc_temp = None
         self._adc_hum = None
@@ -389,9 +392,9 @@ class Adafruit_BME680:
         self._write(_BME680_REG_CTRL_HUM, [self._humidity_oversample])
         # gas measurements enabled
         if self._chip_variant == 0x01:
-            self._write(_BME680_REG_CTRL_GAS, [_BME680_RUNGAS << 1])
+            self._write(_BME680_REG_CTRL_GAS, [(self._run_gas & _BME680_RUNGAS) << 1])
         else:
-            self._write(_BME680_REG_CTRL_GAS, [_BME680_RUNGAS])
+            self._write(_BME680_REG_CTRL_GAS, [(self._run_gas & _BME680_RUNGAS)])
         ctrl = self._read_byte(_BME680_REG_CTRL_MEAS)
         ctrl = (ctrl & 0xFC) | 0x01  # enable single shot!
         self._write(_BME680_REG_CTRL_MEAS, [ctrl])
@@ -492,6 +495,7 @@ class Adafruit_BME680:
             else:
                 hctrl = _BME68X_DISABLE_HEATER
                 run_gas = _BME68X_DISABLE_GAS_MEAS
+            self._run_gas = ~(run_gas - 1)
 
             ctrl_gas_data_0 = bme_set_bits(
                 ctrl_gas_data_0, _BME68X_HCTRL_MSK, _BME68X_HCTRL_POS, hctrl
@@ -598,7 +602,7 @@ class Adafruit_BME680:
         factor: int = 0
         durval: int = 0xFF  # Max duration
 
-        if dur < 0xFC0:
+        if dur >= 0xFC0:
             return durval
         while dur > 0x3F:
             dur = dur / 4
