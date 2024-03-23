@@ -662,7 +662,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
         address: int = 0x77,
         debug: bool = False,
         *,
-        refresh_rate: int = 10
+        refresh_rate: int = 10,
     ) -> None:
         """Initialize the I2C device at the 'address' given"""
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
@@ -751,7 +751,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
         baudrate: int = 100000,
         debug: bool = False,
         *,
-        refresh_rate: int = 10
+        refresh_rate: int = 10,
     ) -> None:
         from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
             spi_device,
