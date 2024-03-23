@@ -2,9 +2,6 @@
 #
 # SPDX-License-Identifier: MIT AND BSD-3-Clause
 
-# We have a lot of attributes for this complex sensor.
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=no_self_use
 
 """
 `adafruit_bme680`
@@ -45,7 +42,7 @@ def delay_microseconds(nusec):
 try:
     # Used only for type annotations.
 
-    import typing  # pylint: disable=unused-import
+    import typing
 
     from busio import I2C, SPI
     from circuitpython_typing import ReadableBuffer
@@ -666,7 +663,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
         refresh_rate: int = 10,
     ) -> None:
         """Initialize the I2C device at the 'address' given"""
-        from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
+        from adafruit_bus_device import (
             i2c_device,
         )
 
@@ -745,7 +742,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
 
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 Too many arguments in function definition
         self,
         spi: SPI,
         cs: DigitalInOut,
@@ -754,7 +751,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
         *,
         refresh_rate: int = 10,
     ) -> None:
-        from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
+        from adafruit_bus_device import (
             spi_device,
         )
 
@@ -770,9 +767,9 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
 
         register = (register | 0x80) & 0xFF  # Read single, bit 7 high.
         with self._spi as spi:
-            spi.write(bytearray([register]))  # pylint: disable=no-member
+            spi.write(bytearray([register]))
             result = bytearray(length)
-            spi.readinto(result)  # pylint: disable=no-member
+            spi.readinto(result)
             if self._debug:
                 print("\t$%02X => %s" % (register, [hex(i) for i in result]))
             return result
@@ -788,7 +785,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             for i, value in enumerate(values):
                 buffer[2 * i] = register + i
                 buffer[2 * i + 1] = value & 0xFF
-            spi.write(buffer)  # pylint: disable=no-member
+            spi.write(buffer)
             if self._debug:
                 print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
 
