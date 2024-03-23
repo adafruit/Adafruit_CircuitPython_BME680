@@ -30,9 +30,10 @@ Implementation Notes
 * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 """
 
+import math
 import struct
 import time
-import math
+
 from micropython import const
 
 
@@ -46,8 +47,8 @@ try:
 
     import typing  # pylint: disable=unused-import
 
-    from circuitpython_typing import ReadableBuffer
     from busio import I2C, SPI
+    from circuitpython_typing import ReadableBuffer
     from digitalio import DigitalInOut
 
 except ImportError:
