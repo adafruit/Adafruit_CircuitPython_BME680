@@ -678,7 +678,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
             result = bytearray(length)
             i2c.readinto(result)
             if self._debug:
-                print("\t$%02X => %s" % (register, [hex(i) for i in result]))
+                print("\t${:02X} => {}".format(register, [hex(i) for i in result]))
             return result
 
     def _write(self, register: int, values: ReadableBuffer) -> None:
@@ -690,7 +690,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
                 buffer[2 * i + 1] = value
             i2c.write(buffer)
             if self._debug:
-                print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+                print("\t${:02X} <= {}".format(values[0], [hex(i) for i in values[1:]]))
 
 
 class Adafruit_BME680_SPI(Adafruit_BME680):
@@ -771,7 +771,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             result = bytearray(length)
             spi.readinto(result)
             if self._debug:
-                print("\t$%02X => %s" % (register, [hex(i) for i in result]))
+                print("\t${:02X} => {}".format(register, [hex(i) for i in result]))
             return result
 
     def _write(self, register: int, values: ReadableBuffer) -> None:
@@ -787,7 +787,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
                 buffer[2 * i + 1] = value & 0xFF
             spi.write(buffer)
             if self._debug:
-                print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+                print("\t${:02X} <= {}".format(values[0], [hex(i) for i in values[1:]]))
 
     def _set_spi_mem_page(self, register: int) -> None:
         spi_mem_page = 0x00
