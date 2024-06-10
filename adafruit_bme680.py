@@ -2,9 +2,6 @@
 #
 # SPDX-License-Identifier: MIT AND BSD-3-Clause
 
-# We have a lot of attributes for this complex sensor.
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=no_self_use
 
 """
 `adafruit_bme680`
@@ -30,9 +27,10 @@ Implementation Notes
 * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 """
 
+import math
 import struct
 import time
-import math
+
 from micropython import const
 
 
@@ -44,10 +42,10 @@ def delay_microseconds(nusec):
 try:
     # Used only for type annotations.
 
-    import typing  # pylint: disable=unused-import
+    import typing
 
-    from circuitpython_typing import ReadableBuffer
     from busio import I2C, SPI
+    from circuitpython_typing import ReadableBuffer
     from digitalio import DigitalInOut
 
 except ImportError:
@@ -659,10 +657,10 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
         address: int = 0x77,
         debug: bool = False,
         *,
-        refresh_rate: int = 10
+        refresh_rate: int = 10,
     ) -> None:
         """Initialize the I2C device at the 'address' given"""
-        from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
+        from adafruit_bus_device import (
             i2c_device,
         )
 
@@ -677,7 +675,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
             result = bytearray(length)
             i2c.readinto(result)
             if self._debug:
-                print("\t$%02X => %s" % (register, [hex(i) for i in result]))
+                print(f"\t${register:02X} => {[hex(i) for i in result]}")
             return result
 
     def _write(self, register: int, values: ReadableBuffer) -> None:
@@ -689,7 +687,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
                 buffer[2 * i + 1] = value
             i2c.write(buffer)
             if self._debug:
-                print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+                print(f"\t${values[0]:02X} <= {[hex(i) for i in values[1:]]}")
 
 
 class Adafruit_BME680_SPI(Adafruit_BME680):
@@ -741,16 +739,16 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
 
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 Too many arguments in function definition
         self,
         spi: SPI,
         cs: DigitalInOut,
         baudrate: int = 100000,
         debug: bool = False,
         *,
-        refresh_rate: int = 10
+        refresh_rate: int = 10,
     ) -> None:
-        from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
+        from adafruit_bus_device import (
             spi_device,
         )
 
@@ -766,11 +764,11 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
 
         register = (register | 0x80) & 0xFF  # Read single, bit 7 high.
         with self._spi as spi:
-            spi.write(bytearray([register]))  # pylint: disable=no-member
+            spi.write(bytearray([register]))
             result = bytearray(length)
-            spi.readinto(result)  # pylint: disable=no-member
+            spi.readinto(result)
             if self._debug:
-                print("\t$%02X => %s" % (register, [hex(i) for i in result]))
+                print(f"\t${register:02X} => {[hex(i) for i in result]}")
             return result
 
     def _write(self, register: int, values: ReadableBuffer) -> None:
@@ -784,9 +782,9 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             for i, value in enumerate(values):
                 buffer[2 * i] = register + i
                 buffer[2 * i + 1] = value & 0xFF
-            spi.write(buffer)  # pylint: disable=no-member
+            spi.write(buffer)
             if self._debug:
-                print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+                print(f"\t${values[0]:02X} <= {[hex(i) for i in values[1:]]}")
 
     def _set_spi_mem_page(self, register: int) -> None:
         spi_mem_page = 0x00
