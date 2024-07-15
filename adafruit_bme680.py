@@ -479,12 +479,8 @@ class Adafruit_BME680:
             run_gas = _BME68X_DISABLE_GAS_MEAS
         self._run_gas = ~(run_gas - 1)
 
-        ctrl_gas_data_0 = bme_set_bits(
-            ctrl_gas_data_0, _BME68X_HCTRL_MSK, _BME68X_HCTRL_POS, hctrl
-        )
-        ctrl_gas_data_1 = bme_set_bits_pos_0(
-            ctrl_gas_data_1, _BME68X_NBCONV_MSK, nb_conv
-        )
+        ctrl_gas_data_0 = bme_set_bits(ctrl_gas_data_0, _BME68X_HCTRL_MSK, _BME68X_HCTRL_POS, hctrl)
+        ctrl_gas_data_1 = bme_set_bits_pos_0(ctrl_gas_data_1, _BME68X_NBCONV_MSK, nb_conv)
         ctrl_gas_data_1 = bme_set_bits(
             ctrl_gas_data_1, _BME68X_RUN_GAS_MSK, _BME68X_RUN_GAS_POS, run_gas
         )

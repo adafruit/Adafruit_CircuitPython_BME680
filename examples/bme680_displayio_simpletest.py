@@ -2,10 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 import time
+
 import board
 from adafruit_display_text.bitmap_label import Label
-from terminalio import FONT
 from displayio import Group
+from terminalio import FONT
+
 import adafruit_bme680
 
 # create a main_group to hold anything we want to show on the display.
@@ -41,10 +43,8 @@ board.DISPLAY.root_group = main_group
 # begin main loop
 while True:
     # Update the label.text property to change the text on the display
-    display_output_label.text = """Temperature: {:.1f} C
-Humidity: {:.1f} %""".format(
-        bme680.temperature + temperature_offset, bme680.relative_humidity
-    )
+    display_output_label.text = f"""Temperature: {bme680.temperature + temperature_offset:.1f} C
+Humidity: {bme680.relative_humidity:.1f} %"""
 
     # wait for a bit
     time.sleep(1)
