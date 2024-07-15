@@ -463,34 +463,33 @@ class Adafruit_BME680:
         run_gas: int = 0
         ctrl_gas_data_0: int = 0
         ctrl_gas_data_1: int = 0
-        try:
-            self._set_op_mode(_BME68X_SLEEP_MODE)
-            self._set_conf(heater_temp, heater_time, op_mode)
-            ctrl_gas_data_0 = self._read_byte(_BME68X_REG_CTRL_GAS_0)
-            ctrl_gas_data_1 = self._read_byte(_BME68X_REG_CTRL_GAS_1)
-            if enable:
-                hctrl = _BME68X_ENABLE_HEATER
-                if self._chip_variant == _BME68X_VARIANT_GAS_HIGH:
-                    run_gas = _BME68X_ENABLE_GAS_MEAS_H
-                else:
-                    run_gas = _BME68X_ENABLE_GAS_MEAS_L
-            else:
-                hctrl = _BME68X_DISABLE_HEATER
-                run_gas = _BME68X_DISABLE_GAS_MEAS
-            self._run_gas = ~(run_gas - 1)
 
-            ctrl_gas_data_0 = bme_set_bits(
-                ctrl_gas_data_0, _BME68X_HCTRL_MSK, _BME68X_HCTRL_POS, hctrl
-            )
-            ctrl_gas_data_1 = bme_set_bits_pos_0(ctrl_gas_data_1, _BME68X_NBCONV_MSK, nb_conv)
-            ctrl_gas_data_1 = bme_set_bits(
-                ctrl_gas_data_1, _BME68X_RUN_GAS_MSK, _BME68X_RUN_GAS_POS, run_gas
-            )
-            self._write(_BME68X_REG_CTRL_GAS_0, [ctrl_gas_data_0])
-            self._write(_BME68X_REG_CTRL_GAS_1, [ctrl_gas_data_1])
-            # HELP check this
-        finally:
-            self._set_op_mode(_BME68X_FORCED_MODE)
+        self._set_op_mode(_BME68X_SLEEP_MODE)
+        self._set_conf(heater_temp, heater_time, op_mode)
+        ctrl_gas_data_0 = self._read_byte(_BME68X_REG_CTRL_GAS_0)
+        ctrl_gas_data_1 = self._read_byte(_BME68X_REG_CTRL_GAS_1)
+        if enable:
+            hctrl = _BME68X_ENABLE_HEATER
+            if self._chip_variant == _BME68X_VARIANT_GAS_HIGH:
+                run_gas = _BME68X_ENABLE_GAS_MEAS_H
+            else:
+                run_gas = _BME68X_ENABLE_GAS_MEAS_L
+        else:
+            hctrl = _BME68X_DISABLE_HEATER
+            run_gas = _BME68X_DISABLE_GAS_MEAS
+        self._run_gas = ~(run_gas - 1)
+
+        ctrl_gas_data_0 = bme_set_bits(
+            ctrl_gas_data_0, _BME68X_HCTRL_MSK, _BME68X_HCTRL_POS, hctrl
+        )
+        ctrl_gas_data_1 = bme_set_bits_pos_0(
+            ctrl_gas_data_1, _BME68X_NBCONV_MSK, nb_conv
+        )
+        ctrl_gas_data_1 = bme_set_bits(
+            ctrl_gas_data_1, _BME68X_RUN_GAS_MSK, _BME68X_RUN_GAS_POS, run_gas
+        )
+        self._write(_BME68X_REG_CTRL_GAS_0, [ctrl_gas_data_0])
+        self._write(_BME68X_REG_CTRL_GAS_1, [ctrl_gas_data_1])
 
     def _set_op_mode(self, op_mode: int) -> None:
         """
