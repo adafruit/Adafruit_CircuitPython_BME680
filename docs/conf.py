@@ -42,9 +42,7 @@ project = "Adafruit BME680 Library"
 creation_year = "2017"
 current_year = str(datetime.datetime.now().year)
 year_duration = (
-    current_year
-    if current_year == creation_year
-    else creation_year + " - " + current_year
+    current_year if current_year == creation_year else creation_year + " - " + current_year
 )
 copyright = year_duration + " ladyada"
 author = "ladyada"

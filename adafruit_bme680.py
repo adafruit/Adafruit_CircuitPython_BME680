@@ -285,19 +285,15 @@ class Adafruit_BME680:
         var2 = (var2 * self._pressure_calibration[5]) / 4
         var2 = var2 + (var1 * self._pressure_calibration[4] * 2)
         var2 = (var2 / 4) + (self._pressure_calibration[3] * 65536)
-        var1 = (
-            (((var1 / 4) * (var1 / 4)) / 8192)
-            * (self._pressure_calibration[2] * 32)
-            / 8
-        ) + ((self._pressure_calibration[1] * var1) / 2)
+        var1 = ((((var1 / 4) * (var1 / 4)) / 8192) * (self._pressure_calibration[2] * 32) / 8) + (
+            (self._pressure_calibration[1] * var1) / 2
+        )
         var1 = var1 / 262144
         var1 = ((32768 + var1) * self._pressure_calibration[0]) / 32768
         calc_pres = 1048576 - self._adc_pres
         calc_pres = (calc_pres - (var2 / 4096)) * 3125
         calc_pres = (calc_pres / var1) * 2
-        var1 = (
-            self._pressure_calibration[8] * (((calc_pres / 8) * (calc_pres / 8)) / 8192)
-        ) / 4096
+        var1 = (self._pressure_calibration[8] * (((calc_pres / 8) * (calc_pres / 8)) / 8192)) / 4096
         var2 = ((calc_pres / 4) * self._pressure_calibration[7]) / 8192
         var3 = (((calc_pres / 256) ** 3) * self._pressure_calibration[9]) / 131072
         calc_pres += (var1 + var2 + var3 + (self._pressure_calibration[6] * 128)) / 16
@@ -321,13 +317,7 @@ class Adafruit_BME680:
             * (
                 ((temp_scaled * self._humidity_calibration[3]) / 100)
                 + (
-                    (
-                        (
-                            temp_scaled
-                            * ((temp_scaled * self._humidity_calibration[4]) / 100)
-                        )
-                        / 64
-                    )
+                    ((temp_scaled * ((temp_scaled * self._humidity_calibration[4]) / 100)) / 64)
                     / 100
                 )
                 + 16384
@@ -365,9 +355,7 @@ class Adafruit_BME680:
             calc_gas_res = (10000 * var1) / var2
             calc_gas_res = calc_gas_res * 100
         else:
-            var1 = (
-                (1340 + (5 * self._sw_err)) * (_LOOKUP_TABLE_1[self._gas_range])
-            ) / 65536
+            var1 = ((1340 + (5 * self._sw_err)) * (_LOOKUP_TABLE_1[self._gas_range])) / 65536
             var2 = ((self._adc_gas * 32768) - 16777216) + var1
             var3 = (_LOOKUP_TABLE_2[self._gas_range] * var1) / 512
             calc_gas_res = (var3 + (var2 / 2)) / var2
@@ -428,9 +416,7 @@ class Adafruit_BME680:
         # print("\n\n",coeff)
         coeff = [float(i) for i in coeff]
         self._temp_calibration = [coeff[x] for x in [23, 0, 1]]
-        self._pressure_calibration = [
-            coeff[x] for x in [3, 4, 5, 7, 8, 10, 9, 12, 13, 14]
-        ]
+        self._pressure_calibration = [coeff[x] for x in [3, 4, 5, 7, 8, 10, 9, 12, 13, 14]]
         self._humidity_calibration = [coeff[x] for x in [17, 16, 18, 19, 20, 21, 22]]
         self._gas_calibration = [coeff[x] for x in [25, 24, 26]]
 
@@ -469,9 +455,7 @@ class Adafruit_BME680:
             return False
         return True
 
-    def _set_heatr_conf(
-        self, heater_temp: int, heater_time: int, enable: bool = True
-    ) -> None:
+    def _set_heatr_conf(self, heater_temp: int, heater_time: int, enable: bool = True) -> None:
         # restrict to BME68X_FORCED_MODE
         op_mode: int = _BME68X_FORCED_MODE
         nb_conv: int = 0
@@ -498,9 +482,7 @@ class Adafruit_BME680:
             ctrl_gas_data_0 = bme_set_bits(
                 ctrl_gas_data_0, _BME68X_HCTRL_MSK, _BME68X_HCTRL_POS, hctrl
             )
-            ctrl_gas_data_1 = bme_set_bits_pos_0(
-                ctrl_gas_data_1, _BME68X_NBCONV_MSK, nb_conv
-            )
+            ctrl_gas_data_1 = bme_set_bits_pos_0(ctrl_gas_data_1, _BME68X_NBCONV_MSK, nb_conv)
             ctrl_gas_data_1 = bme_set_bits(
                 ctrl_gas_data_1, _BME68X_RUN_GAS_MSK, _BME68X_RUN_GAS_POS, run_gas
             )
@@ -530,9 +512,7 @@ class Adafruit_BME680:
                 delay_microseconds(_BME68X_PERIOD_POLL)
         # Already in sleep
         if op_mode != _BME68X_SLEEP_MODE:
-            tmp_pow_mode = (tmp_pow_mode & ~_BME68X_MODE_MSK) | (
-                op_mode & _BME68X_MODE_MSK
-            )
+            tmp_pow_mode = (tmp_pow_mode & ~_BME68X_MODE_MSK) | (op_mode & _BME68X_MODE_MSK)
             self._write(_BME680_REG_CTRL_MEAS, [tmp_pow_mode])
 
     def _set_conf(self, heater_temp: int, heater_time: int, op_mode: int) -> None:
@@ -588,9 +568,7 @@ class Adafruit_BME680:
         var3: float = gh3 / (1024.0)
         var4: float = var1 * (1.0 + (var2 * float(temp)))
         var5: float = var4 + (var3 * amb)
-        res_heat: int = int(
-            3.4 * ((var5 * (4 / (4 + htr)) * (1 / (1 + (htv * 0.002)))) - 25)
-        )
+        res_heat: int = int(3.4 * ((var5 * (4 / (4 + htr)) * (1 / (1 + (htv * 0.002)))) - 25))
         return res_heat
 
     def _calc_gas_wait(self, dur: int) -> int:
