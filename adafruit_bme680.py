@@ -601,7 +601,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
             import board
             import adafruit_bme680
 
-        Once this is done you can define your `board.I2C` object and define your sensor object
+        Once this is done you can define your ``board.I2C`` object and define your sensor object
 
         .. code-block:: python
 
@@ -688,7 +688,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             from digitalio import DigitalInOut, Direction
             import adafruit_bme680
 
-        Once this is done you can define your `board.SPI` object and define your sensor object
+        Once this is done you can define your ``board.SPI`` object and define your sensor object
 
         .. code-block:: python
 
