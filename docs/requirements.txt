@@ -5,3 +5,4 @@
 sphinx
 sphinxcontrib-jquery
 sphinx-rtd-theme
+adafruit-circuitpython-typing

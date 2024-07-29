@@ -2,9 +2,6 @@
 #
 # SPDX-License-Identifier: MIT AND BSD-3-Clause
 
-# We have a lot of attributes for this complex sensor.
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=no_self_use
 
 """
 `adafruit_bme680`
@@ -30,9 +27,10 @@ Implementation Notes
 * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 """
 
+import math
 import struct
 import time
-import math
+
 from micropython import const
 
 
@@ -44,10 +42,10 @@ def delay_microseconds(nusec):
 try:
     # Used only for type annotations.
 
-    import typing  # pylint: disable=unused-import
+    import typing
 
-    from circuitpython_typing import ReadableBuffer
     from busio import I2C, SPI
+    from circuitpython_typing import ReadableBuffer
     from digitalio import DigitalInOut
 
 except ImportError:
@@ -287,19 +285,15 @@ class Adafruit_BME680:
         var2 = (var2 * self._pressure_calibration[5]) / 4
         var2 = var2 + (var1 * self._pressure_calibration[4] * 2)
         var2 = (var2 / 4) + (self._pressure_calibration[3] * 65536)
-        var1 = (
-            (((var1 / 4) * (var1 / 4)) / 8192)
-            * (self._pressure_calibration[2] * 32)
-            / 8
-        ) + ((self._pressure_calibration[1] * var1) / 2)
+        var1 = ((((var1 / 4) * (var1 / 4)) / 8192) * (self._pressure_calibration[2] * 32) / 8) + (
+            (self._pressure_calibration[1] * var1) / 2
+        )
         var1 = var1 / 262144
         var1 = ((32768 + var1) * self._pressure_calibration[0]) / 32768
         calc_pres = 1048576 - self._adc_pres
         calc_pres = (calc_pres - (var2 / 4096)) * 3125
         calc_pres = (calc_pres / var1) * 2
-        var1 = (
-            self._pressure_calibration[8] * (((calc_pres / 8) * (calc_pres / 8)) / 8192)
-        ) / 4096
+        var1 = (self._pressure_calibration[8] * (((calc_pres / 8) * (calc_pres / 8)) / 8192)) / 4096
         var2 = ((calc_pres / 4) * self._pressure_calibration[7]) / 8192
         var3 = (((calc_pres / 256) ** 3) * self._pressure_calibration[9]) / 131072
         calc_pres += (var1 + var2 + var3 + (self._pressure_calibration[6] * 128)) / 16
@@ -323,13 +317,7 @@ class Adafruit_BME680:
             * (
                 ((temp_scaled * self._humidity_calibration[3]) / 100)
                 + (
-                    (
-                        (
-                            temp_scaled
-                            * ((temp_scaled * self._humidity_calibration[4]) / 100)
-                        )
-                        / 64
-                    )
+                    ((temp_scaled * ((temp_scaled * self._humidity_calibration[4]) / 100)) / 64)
                     / 100
                 )
                 + 16384
@@ -367,9 +355,7 @@ class Adafruit_BME680:
             calc_gas_res = (10000 * var1) / var2
             calc_gas_res = calc_gas_res * 100
         else:
-            var1 = (
-                (1340 + (5 * self._sw_err)) * (_LOOKUP_TABLE_1[self._gas_range])
-            ) / 65536
+            var1 = ((1340 + (5 * self._sw_err)) * (_LOOKUP_TABLE_1[self._gas_range])) / 65536
             var2 = ((self._adc_gas * 32768) - 16777216) + var1
             var3 = (_LOOKUP_TABLE_2[self._gas_range] * var1) / 512
             calc_gas_res = (var3 + (var2 / 2)) / var2
@@ -430,9 +416,7 @@ class Adafruit_BME680:
         # print("\n\n",coeff)
         coeff = [float(i) for i in coeff]
         self._temp_calibration = [coeff[x] for x in [23, 0, 1]]
-        self._pressure_calibration = [
-            coeff[x] for x in [3, 4, 5, 7, 8, 10, 9, 12, 13, 14]
-        ]
+        self._pressure_calibration = [coeff[x] for x in [3, 4, 5, 7, 8, 10, 9, 12, 13, 14]]
         self._humidity_calibration = [coeff[x] for x in [17, 16, 18, 19, 20, 21, 22]]
         self._gas_calibration = [coeff[x] for x in [25, 24, 26]]
 
@@ -471,9 +455,7 @@ class Adafruit_BME680:
             return False
         return True
 
-    def _set_heatr_conf(
-        self, heater_temp: int, heater_time: int, enable: bool = True
-    ) -> None:
+    def _set_heatr_conf(self, heater_temp: int, heater_time: int, enable: bool = True) -> None:
         # restrict to BME68X_FORCED_MODE
         op_mode: int = _BME68X_FORCED_MODE
         nb_conv: int = 0
@@ -497,12 +479,8 @@ class Adafruit_BME680:
             run_gas = _BME68X_DISABLE_GAS_MEAS
         self._run_gas = ~(run_gas - 1)
 
-        ctrl_gas_data_0 = bme_set_bits(
-            ctrl_gas_data_0, _BME68X_HCTRL_MSK, _BME68X_HCTRL_POS, hctrl
-        )
-        ctrl_gas_data_1 = bme_set_bits_pos_0(
-            ctrl_gas_data_1, _BME68X_NBCONV_MSK, nb_conv
-        )
+        ctrl_gas_data_0 = bme_set_bits(ctrl_gas_data_0, _BME68X_HCTRL_MSK, _BME68X_HCTRL_POS, hctrl)
+        ctrl_gas_data_1 = bme_set_bits_pos_0(ctrl_gas_data_1, _BME68X_NBCONV_MSK, nb_conv)
         ctrl_gas_data_1 = bme_set_bits(
             ctrl_gas_data_1, _BME68X_RUN_GAS_MSK, _BME68X_RUN_GAS_POS, run_gas
         )
@@ -529,9 +507,7 @@ class Adafruit_BME680:
                 delay_microseconds(_BME68X_PERIOD_POLL)
         # Already in sleep
         if op_mode != _BME68X_SLEEP_MODE:
-            tmp_pow_mode = (tmp_pow_mode & ~_BME68X_MODE_MSK) | (
-                op_mode & _BME68X_MODE_MSK
-            )
+            tmp_pow_mode = (tmp_pow_mode & ~_BME68X_MODE_MSK) | (op_mode & _BME68X_MODE_MSK)
             self._write(_BME680_REG_CTRL_MEAS, [tmp_pow_mode])
 
     def _set_conf(self, heater_temp: int, heater_time: int, op_mode: int) -> None:
@@ -587,9 +563,7 @@ class Adafruit_BME680:
         var3: float = gh3 / (1024.0)
         var4: float = var1 * (1.0 + (var2 * float(temp)))
         var5: float = var4 + (var3 * amb)
-        res_heat: int = int(
-            3.4 * ((var5 * (4 / (4 + htr)) * (1 / (1 + (htv * 0.002)))) - 25)
-        )
+        res_heat: int = int(3.4 * ((var5 * (4 / (4 + htr)) * (1 / (1 + (htv * 0.002)))) - 25))
         return res_heat
 
     def _calc_gas_wait(self, dur: int) -> int:
@@ -627,7 +601,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
             import board
             import adafruit_bme680
 
-        Once this is done you can define your `board.I2C` object and define your sensor object
+        Once this is done you can define your ``board.I2C`` object and define your sensor object
 
         .. code-block:: python
 
@@ -659,10 +633,10 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
         address: int = 0x77,
         debug: bool = False,
         *,
-        refresh_rate: int = 10
+        refresh_rate: int = 10,
     ) -> None:
         """Initialize the I2C device at the 'address' given"""
-        from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
+        from adafruit_bus_device import (
             i2c_device,
         )
 
@@ -677,7 +651,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
             result = bytearray(length)
             i2c.readinto(result)
             if self._debug:
-                print("\t$%02X => %s" % (register, [hex(i) for i in result]))
+                print(f"\t${register:02X} => {[hex(i) for i in result]}")
             return result
 
     def _write(self, register: int, values: ReadableBuffer) -> None:
@@ -689,7 +663,7 @@ class Adafruit_BME680_I2C(Adafruit_BME680):
                 buffer[2 * i + 1] = value
             i2c.write(buffer)
             if self._debug:
-                print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+                print(f"\t${values[0]:02X} <= {[hex(i) for i in values[1:]]}")
 
 
 class Adafruit_BME680_SPI(Adafruit_BME680):
@@ -714,7 +688,7 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             from digitalio import DigitalInOut, Direction
             import adafruit_bme680
 
-        Once this is done you can define your `board.SPI` object and define your sensor object
+        Once this is done you can define your ``board.SPI`` object and define your sensor object
 
         .. code-block:: python
 
@@ -741,16 +715,16 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
 
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913 Too many arguments in function definition
         self,
         spi: SPI,
         cs: DigitalInOut,
         baudrate: int = 100000,
         debug: bool = False,
         *,
-        refresh_rate: int = 10
+        refresh_rate: int = 10,
     ) -> None:
-        from adafruit_bus_device import (  # pylint: disable=import-outside-toplevel
+        from adafruit_bus_device import (
             spi_device,
         )
 
@@ -766,11 +740,11 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
 
         register = (register | 0x80) & 0xFF  # Read single, bit 7 high.
         with self._spi as spi:
-            spi.write(bytearray([register]))  # pylint: disable=no-member
+            spi.write(bytearray([register]))
             result = bytearray(length)
-            spi.readinto(result)  # pylint: disable=no-member
+            spi.readinto(result)
             if self._debug:
-                print("\t$%02X => %s" % (register, [hex(i) for i in result]))
+                print(f"\t${register:02X} => {[hex(i) for i in result]}")
             return result
 
     def _write(self, register: int, values: ReadableBuffer) -> None:
@@ -784,9 +758,9 @@ class Adafruit_BME680_SPI(Adafruit_BME680):
             for i, value in enumerate(values):
                 buffer[2 * i] = register + i
                 buffer[2 * i + 1] = value & 0xFF
-            spi.write(buffer)  # pylint: disable=no-member
+            spi.write(buffer)
             if self._debug:
-                print("\t$%02X <= %s" % (values[0], [hex(i) for i in values[1:]]))
+                print(f"\t${values[0]:02X} <= {[hex(i) for i in values[1:]]}")
 
     def _set_spi_mem_page(self, register: int) -> None:
         spi_mem_page = 0x00
