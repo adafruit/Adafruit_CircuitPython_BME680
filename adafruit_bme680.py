@@ -385,10 +385,13 @@ class Adafruit_BME680:
         ctrl = (ctrl & 0xFC) | 0x01  # enable single shot!
         self._write(_BME680_REG_CTRL_MEAS, [ctrl])
         new_data = False
+        start_time = time.monotonic()
         while not new_data:
             data = self._read(_BME680_REG_MEAS_STATUS, 17)
             new_data = data[0] & 0x80 != 0
             time.sleep(0.005)
+            if start_time >= time.monotonic() - 3.0:
+                raise RuntimeError("Timeout while reading sensor data")
         self._last_reading = time.monotonic()
 
         self._adc_pres = _read24(data[2:5]) / 16
