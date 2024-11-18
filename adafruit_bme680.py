@@ -390,7 +390,7 @@ class Adafruit_BME680:
             data = self._read(_BME680_REG_MEAS_STATUS, 17)
             new_data = data[0] & 0x80 != 0
             time.sleep(0.005)
-            if start_time >= time.monotonic() - 3.0:
+            if time.monotonic() - start_time >= 3.0:
                 raise RuntimeError("Timeout while reading sensor data")
         self._last_reading = time.monotonic()
 
